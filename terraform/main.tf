@@ -1,6 +1,5 @@
 provider "aws" {
   region = "eu-west-1"
-  profile = "smitesh"
 }
 
 # Create the S3 bucket
