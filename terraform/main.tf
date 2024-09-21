@@ -4,7 +4,7 @@ provider "aws" {
 
 # Create the S3 bucket
 resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = "narath-muni-api-bucket"
+  bucket = "narath-muni-api-bucket-v2"
 }
 
 # Upload the lambda function zip file to the S3 bucket
