@@ -2,7 +2,6 @@ provider "aws" {
   region = "eu-west-1"
 }
 
-<<<<<<< Updated upstream
 # Define the Lambda function name
 locals {
   lambda_function_name = "express-lambda"
@@ -84,48 +83,6 @@ resource "aws_apigatewayv2_route" "lambda_route" {
   api_id    = aws_apigatewayv2_api.http_api.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
-=======
-# Check and import the existing S3 bucket if it exists
-data "aws_s3_bucket" "lambda_bucket" {
-  bucket = "narath-muni-api-bucket-v2"
-}
-
-# Check and import the existing IAM role if it exists
-data "aws_iam_role" "lambda_exec_role" {
-  role_name = "lambda_exec_role"
-}
-
-# Check for the existing Lambda function
-data "aws_lambda_function" "existing_lambda" {
-  function_name = "express-lambda"
-}
-
-# Define the Lambda function resource
-resource "aws_lambda_function" "express_lambda" {
-  count = data.aws_lambda_function.existing_lambda ? 0 : 1  # Only create if it doesn't exist
-  function_name = "express-lambda"
-  handler       = "index.handler"  # Change as per your handler
-  runtime       = "nodejs20.x"
-  role          = data.aws_iam_role.lambda_exec_role.arn
-
-  s3_bucket     = data.aws_s3_bucket.lambda_bucket.id
-  s3_key        = "app.zip"
-
-  # Add any environment variables or other configurations here
-}
-
-# Define the API Gateway integration
-resource "aws_apigatewayv2_api" "http_api" {
-  name                = "express-api"
-  protocol_type       = "HTTP"
-  route_selection_expression = "$request.method $request.path"
-}
-
-resource "aws_apigatewayv2_integration" "lambda_integration" {
-  api_id            = aws_apigatewayv2_api.http_api.id
-  integration_type  = "AWS_PROXY"
-  integration_uri   = data.aws_lambda_function.existing_lambda.arn  # Reference the existing Lambda ARN
->>>>>>> Stashed changes
 }
 
 resource "aws_apigatewayv2_stage" "api_stage" {
