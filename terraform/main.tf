@@ -12,8 +12,15 @@ data "aws_lambda_function" "existing_lambda" {
   function_name = local.lambda_function_name
 }
 
+# Check if the S3 bucket exists
+data "aws_s3_bucket" "existing_bucket" {
+  bucket = "narath-muni-api-bucket-v2"
+}
+
 # S3 bucket for Lambda deployment
 resource "aws_s3_bucket" "lambda_bucket" {
+  count = length(data.aws_s3_bucket.existing_bucket) == 0 ? 1 : 0
+
   bucket = "narath-muni-api-bucket-v2"
 
   # Add lifecycle policy to prevent accidental deletion
@@ -22,14 +29,22 @@ resource "aws_s3_bucket" "lambda_bucket" {
   }
 }
 
+# S3 object for the Lambda deployment package
 resource "aws_s3_object" "lambda_zip" {
-  bucket = aws_s3_bucket.lambda_bucket.bucket
+  bucket = aws_s3_bucket.lambda_bucket[0].bucket
   key    = "app.zip"
   source = "../app.zip"
 }
 
+# Check if the IAM role exists
+data "aws_iam_role" "existing_role" {
+  role_name = "lambda_exec_role"
+}
+
 # IAM Role for Lambda execution
 resource "aws_iam_role" "lambda_exec_role" {
+  count = length(data.aws_iam_role.existing_role) == 0 ? 1 : 0
+
   name = "lambda_exec_role"
 
   assume_role_policy = jsonencode({
@@ -45,7 +60,9 @@ resource "aws_iam_role" "lambda_exec_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.lambda_exec_role.name
+  count = length(data.aws_iam_role.existing_role) > 0 ? 1 : 0
+
+  role       = aws_iam_role.lambda_exec_role[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -54,11 +71,11 @@ resource "aws_lambda_function" "express_lambda" {
   count = length(data.aws_lambda_function.existing_lambda) == 0 ? 1 : 0
 
   function_name = local.lambda_function_name
-  s3_bucket     = aws_s3_bucket.lambda_bucket.bucket
+  s3_bucket     = aws_s3_bucket.lambda_bucket[0].bucket
   s3_key        = aws_s3_object.lambda_zip.key
   handler       = "handler.handler"  # Adjust if necessary
   runtime       = "nodejs20.x"
-  role          = aws_iam_role.lambda_exec_role.arn
+  role          = length(data.aws_iam_role.existing_role) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.lambda_exec_role[0].arn
   memory_size   = 512
   timeout       = 10
 }
@@ -68,7 +85,7 @@ resource "null_resource" "update_lambda_code" {
   count = length(data.aws_lambda_function.existing_lambda) > 0 ? 1 : 0
 
   provisioner "local-exec" {
-    command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${aws_s3_bucket.lambda_bucket.bucket} --s3-key ${aws_s3_object.lambda_zip.key} --region eu-west-1"
+    command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${aws_s3_bucket.lambda_bucket[0].bucket} --s3-key ${aws_s3_object.lambda_zip.key} --region eu-west-1"
   }
 }
 
