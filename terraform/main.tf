@@ -46,7 +46,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # Create or update the Lambda function
 resource "aws_lambda_function" "express_lambda" {
-  count = data.aws_lambda_function.existing_lambda ? 0 : 1
+  count = length(data.aws_lambda_function.existing_lambda) == 0 ? 1 : 0
 
   function_name = local.lambda_function_name
   s3_bucket     = aws_s3_bucket.lambda_bucket.bucket
@@ -60,7 +60,7 @@ resource "aws_lambda_function" "express_lambda" {
 
 # Update the existing Lambda function code if it exists
 resource "null_resource" "update_lambda_code" {
-  count = data.aws_lambda_function.existing_lambda ? 1 : 0
+  count = length(data.aws_lambda_function.existing_lambda) > 0 ? 1 : 0
 
   provisioner "local-exec" {
     command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${aws_s3_bucket.lambda_bucket.bucket} --s3-key ${aws_s3_object.lambda_zip.key} --region eu-west-1"
