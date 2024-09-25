@@ -31,7 +31,9 @@ resource "aws_s3_bucket" "lambda_bucket" {
 
 # S3 object for the Lambda deployment package
 resource "aws_s3_object" "lambda_zip" {
-  bucket = aws_s3_bucket.lambda_bucket[0].bucket
+  count = length(data.aws_s3_bucket.existing_bucket) > 0 ? 0 : 1
+
+  bucket = data.aws_s3_bucket.existing_bucket.bucket
   key    = "app.zip"
   source = "../app.zip"
 }
@@ -71,8 +73,8 @@ resource "aws_lambda_function" "express_lambda" {
   count = length(data.aws_lambda_function.existing_lambda) == 0 ? 1 : 0
 
   function_name = local.lambda_function_name
-  s3_bucket     = aws_s3_bucket.lambda_bucket[0].bucket
-  s3_key        = aws_s3_object.lambda_zip.key
+  s3_bucket     = length(data.aws_s3_bucket.existing_bucket) > 0 ? data.aws_s3_bucket.existing_bucket.bucket : aws_s3_bucket.lambda_bucket[0].bucket
+  s3_key        = aws_s3_object.lambda_zip[0].key
   handler       = "handler.handler"  # Adjust if necessary
   runtime       = "nodejs20.x"
   role          = length(data.aws_iam_role.existing_role) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.lambda_exec_role[0].arn
@@ -85,7 +87,7 @@ resource "null_resource" "update_lambda_code" {
   count = length(data.aws_lambda_function.existing_lambda) > 0 ? 1 : 0
 
   provisioner "local-exec" {
-    command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${aws_s3_bucket.lambda_bucket[0].bucket} --s3-key ${aws_s3_object.lambda_zip.key} --region eu-west-1"
+    command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${length(data.aws_s3_bucket.existing_bucket) > 0 ? data.aws_s3_bucket.existing_bucket.bucket : aws_s3_bucket.lambda_bucket[0].bucket} --s3-key ${aws_s3_object.lambda_zip[0].key} --region eu-west-1"
   }
 }
 
