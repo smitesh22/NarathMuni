@@ -38,7 +38,7 @@ resource "aws_s3_object" "lambda_zip" {
 
 # Check if the IAM role exists
 data "aws_iam_role" "existing_role" {
-  role_name = "lambda_exec_role"
+  name = "lambda_exec_role"
 }
 
 # IAM Role for Lambda execution
