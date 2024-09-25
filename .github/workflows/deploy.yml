@@ -42,28 +42,6 @@ jobs:
         run: terraform init
         working-directory: ./terraform
 
-      - name: Check and import S3 Bucket if exists
-        run: |
-          bucket_exists=$(aws s3api head-bucket --bucket narath-muni-api-bucket-v2 2>&1)
-          if echo "$bucket_exists" | grep 'Not Found'; then
-            echo "S3 bucket does not exist. Terraform will create it."
-          else
-            echo "S3 bucket exists. Importing into Terraform..."
-            terraform import aws_s3_bucket.lambda_bucket narath-muni-api-bucket-v2
-          fi
-        working-directory: ./terraform
-
-      - name: Check and import IAM Role if exists
-        run: |
-          role_exists=$(aws iam get-role --role-name lambda_exec_role 2>&1)
-          if echo "$role_exists" | grep 'NoSuchEntity'; then
-            echo "IAM role does not exist. Terraform will create it."
-          else
-            echo "IAM role exists. Importing into Terraform..."
-            terraform import aws_iam_role.lambda_exec_role lambda_exec_role
-          fi
-        working-directory: ./terraform
-
       - name: Plan Terraform
         run: terraform plan
         working-directory: ./terraform

@@ -15,6 +15,11 @@ data "aws_lambda_function" "existing_lambda" {
 # S3 bucket for Lambda deployment
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "narath-muni-api-bucket-v2"
+
+  # Add lifecycle policy to prevent accidental deletion
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_object" "lambda_zip" {
@@ -75,7 +80,7 @@ resource "aws_apigatewayv2_api" "http_api" {
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id               = aws_apigatewayv2_api.http_api.id
   integration_type     = "AWS_PROXY"
-  integration_uri      = aws_lambda_function.express_lambda[0].arn
+  integration_uri      = length(data.aws_lambda_function.existing_lambda) > 0 ? data.aws_lambda_function.existing_lambda.arn : aws_lambda_function.express_lambda[0].arn
   payload_format_version = "2.0"
 }
 
