@@ -6,3 +6,4 @@ terraform.tfstate
 terraform.tfstate.backup
 package-lock.json
 app.zip
+.env
