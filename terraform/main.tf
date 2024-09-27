@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  profile = "smitesh"
+  //profile = "smitesh" need to run locally
   region  = var.region
 }
 
