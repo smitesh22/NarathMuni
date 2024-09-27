@@ -10,8 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  //profile = "smitesh" need to run locally
-  region  = var.region
+  region = var.region
 }
 
 variable "region" {
@@ -20,79 +19,34 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = "narath-muni-v3"
-
-  tags = {
-    Name        = "narath-muni-api"
-    Environment = "prod"
-  }
+# Data sources for existing resources
+data "aws_s3_bucket" "lambda_bucket" {
+  bucket = "narath-muni-v3" # Use the name of your existing bucket
 }
 
-resource "aws_s3_bucket_object" "lambda_code" {
-  bucket = aws_s3_bucket.lambda_bucket.id
-  key    = "app.zip"
-  source = "../app.zip"  # Path to your local zip file
+data "aws_iam_role" "lambda_role" {
+  name = "narath_muni_lambda_role" # Use the name of your existing IAM role
 }
 
-resource "aws_iam_role" "lambda_role" {
-  name = "narath_muni_lambda_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid    = ""
-      },
-    ]
-  })
+data "aws_iam_policy" "lambda_policy" {
+  arn = "arn:aws:iam::${var.aws_account_id}:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
 }
 
-resource "aws_iam_policy" "lambda_policy" {
-  name        = "narath_muni_lambda_policy"
-  description = "A policy for my Lambda function"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      },
-      # Add additional permissions as necessary
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
-  policy_arn = aws_iam_policy.lambda_policy.arn
-  role       = aws_iam_role.lambda_role.name
-}
-
+# Use the data sources in your Lambda function configuration
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = aws_iam_role.lambda_role.arn
+  role          = data.aws_iam_role.lambda_role.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
-  s3_bucket      = aws_s3_bucket.lambda_bucket.id
-  s3_key         = aws_s3_bucket_object.lambda_code.key  # Updated to reference the S3 object
+  s3_bucket      = data.aws_s3_bucket.lambda_bucket.id
+  s3_key         = "app.zip"  # Ensure this matches your object key in S3
 
-  source_code_hash = filebase64sha256("../app.zip")
+  source_code_hash = filebase64sha256("../app.zip") # Ensure the zip file path is correct
 
   environment {
     variables = {
-      ENV = "PROD" 
+      ENV = "PROD"
     }
   }
 }
