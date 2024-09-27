@@ -20,11 +20,11 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --production  # Install only production dependencies
 
       - name: Build and package the app
         run: |
-          zip -r app.zip . -x "*.git*"
+          zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "*.terraform*" # Exclude unnecessary files, but include node_modules
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
@@ -40,6 +40,10 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+        working-directory: ./terraform
+        
+      - name: Validate Terraform
+        run: terraform validate
         working-directory: ./terraform
 
       - name: Plan Terraform

@@ -2,3 +2,7 @@ node_modules
 .aws
 .terraform
 .terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+package-lock.json
+app.zip
