@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
+  region = var.region
 }
 
 variable "region" {
@@ -19,31 +19,36 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = "narath-muni-v3"
-
-  tags = {
-    Name        = "narath-muni-api"
-    Environment = "prod"
-  }
-}
-
-resource "aws_s3_bucket_object" "lambda_code" {
-  bucket = aws_s3_bucket.lambda_bucket.id
-  key    = "app.zip"
-  source = "../app.zip"  # Path to your local zip file
+# Data sources for existing resources
+data "aws_s3_bucket" "lambda_bucket" {
+  bucket = "narath-muni-v3" # Use the name of your existing bucket
 }
 
 data "aws_iam_role" "lambda_role" {
-  name = "narath_muni_lambda_role"
+  name = "narath_muni_lambda_role" # Use the name of your existing IAM role
 }
 
 data "aws_iam_policy" "lambda_policy" {
-  arn = "arn:aws:iam::your-account-id:policy/narath_muni_lambda_policy"
+  arn = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
 }
 
-data "aws_lambda_function" "my_lambda_function" {
-  function_name = "narath_muni"  # Use the existing Lambda function's name
+# Use the data sources in your Lambda function configuration
+resource "aws_lambda_function" "my_lambda_function" {
+  function_name = "narath_muni"
+  role          = data.aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  s3_bucket      = data.aws_s3_bucket.lambda_bucket.id
+  s3_key         = "app.zip" 
+
+  source_code_hash = filebase64sha256("../app.zip") 
+
+  environment {
+    variables = {
+      ENV = "PROD"
+    }
+  }
 }
 
 resource "aws_api_gateway_rest_api" "api" {
@@ -70,7 +75,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method             = aws_api_gateway_method.any_method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = data.aws_lambda_function.my_lambda_function.invoke_arn  # Reference the existing function
+  uri                     = aws_lambda_function.my_lambda_function.invoke_arn
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
@@ -82,7 +87,7 @@ resource "aws_api_gateway_deployment" "deployment" {
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = data.aws_lambda_function.my_lambda_function.function_name
+  function_name = aws_lambda_function.my_lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*"
