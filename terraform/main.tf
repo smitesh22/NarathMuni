@@ -29,7 +29,7 @@ data "aws_iam_role" "lambda_role" {
 }
 
 data "aws_iam_policy" "lambda_policy" {
-  arn = "arn:aws:iam::${var.aws_account_id}:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
+  arn = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
 }
 
 # Use the data sources in your Lambda function configuration
