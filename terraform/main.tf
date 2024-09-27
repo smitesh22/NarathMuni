@@ -1,121 +1,144 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0" # Use a recent version
+    }
+  }
+
+  required_version = ">= 1.0"
+}
+
 provider "aws" {
-  region = "eu-west-1"
+  profile = "smitesh"
+  region  = var.region
 }
 
-# Define the Lambda function name
-locals {
-  lambda_function_name = "express-lambda"
+variable "region" {
+  description = "The AWS region to deploy the resources"
+  type        = string
+  default     = "eu-west-1"
 }
 
-# Check if the Lambda function exists
-data "aws_lambda_function" "existing_lambda" {
-  function_name = local.lambda_function_name
-}
-
-# Check if the S3 bucket exists
-data "aws_s3_bucket" "existing_bucket" {
-  bucket = "narath-muni-api-bucket-v2"
-}
-
-# S3 bucket for Lambda deployment
 resource "aws_s3_bucket" "lambda_bucket" {
-  count = length(data.aws_s3_bucket.existing_bucket) == 0 ? 1 : 0
+  bucket = "narath-muni-v3"
 
-  bucket = "narath-muni-api-bucket-v2"
-
-  # Add lifecycle policy to prevent accidental deletion
-  lifecycle {
-    prevent_destroy = true
+  tags = {
+    Name        = "narath-muni-api"
+    Environment = "prod"
   }
 }
 
-# S3 object for the Lambda deployment package
-resource "aws_s3_object" "lambda_zip" {
-  count = length(data.aws_s3_bucket.existing_bucket) > 0 ? 0 : 1
-
-  bucket = data.aws_s3_bucket.existing_bucket.bucket
+resource "aws_s3_bucket_object" "lambda_code" {
+  bucket = aws_s3_bucket.lambda_bucket.id
   key    = "app.zip"
-  source = "../app.zip"
+  source = "../app.zip"  # Path to your local zip file
 }
 
-# Check if the IAM role exists
-data "aws_iam_role" "existing_role" {
-  name = "lambda_exec_role"
-}
-
-# IAM Role for Lambda execution
-resource "aws_iam_role" "lambda_exec_role" {
-  count = length(data.aws_iam_role.existing_role) == 0 ? 1 : 0
-
-  name = "lambda_exec_role"
+resource "aws_iam_role" "lambda_role" {
+  name = "narath_muni_lambda_role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Effect = "Allow",
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      },
+    ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  count = length(data.aws_iam_role.existing_role) > 0 ? 1 : 0
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "narath_muni_lambda_policy"
+  description = "A policy for my Lambda function"
 
-  role       = aws_iam_role.lambda_exec_role[0].name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      # Add additional permissions as necessary
+    ]
+  })
 }
 
-# Create or update the Lambda function
-resource "aws_lambda_function" "express_lambda" {
-  count = length(data.aws_lambda_function.existing_lambda) == 0 ? 1 : 0
+resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
+  policy_arn = aws_iam_policy.lambda_policy.arn
+  role       = aws_iam_role.lambda_role.name
+}
 
-  function_name = local.lambda_function_name
-  s3_bucket     = length(data.aws_s3_bucket.existing_bucket) > 0 ? data.aws_s3_bucket.existing_bucket.bucket : aws_s3_bucket.lambda_bucket[0].bucket
-  s3_key        = aws_s3_object.lambda_zip[0].key
-  handler       = "handler.handler"  # Adjust if necessary
+resource "aws_lambda_function" "my_lambda_function" {
+  function_name = "narath_muni"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
   runtime       = "nodejs20.x"
-  role          = length(data.aws_iam_role.existing_role) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.lambda_exec_role[0].arn
-  memory_size   = 512
-  timeout       = 10
-}
 
-# Update the existing Lambda function code if it exists
-resource "null_resource" "update_lambda_code" {
-  count = length(data.aws_lambda_function.existing_lambda) > 0 ? 1 : 0
+  s3_bucket      = aws_s3_bucket.lambda_bucket.id
+  s3_key         = aws_s3_bucket_object.lambda_code.key  # Updated to reference the S3 object
 
-  provisioner "local-exec" {
-    command = "aws lambda update-function-code --function-name ${local.lambda_function_name} --s3-bucket ${length(data.aws_s3_bucket.existing_bucket) > 0 ? data.aws_s3_bucket.existing_bucket.bucket : aws_s3_bucket.lambda_bucket[0].bucket} --s3-key ${aws_s3_object.lambda_zip[0].key} --region eu-west-1"
+  source_code_hash = filebase64sha256("../app.zip")
+
+  environment {
+    variables = {
+      ENV = "PROD" 
+    }
   }
 }
 
-resource "aws_apigatewayv2_api" "http_api" {
-  name          = "express-api"
-  protocol_type = "HTTP"
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "Narath-Muni_API"
+  description = "API Gateway for my Node.js server"
 }
 
-resource "aws_apigatewayv2_integration" "lambda_integration" {
-  api_id               = aws_apigatewayv2_api.http_api.id
-  integration_type     = "AWS_PROXY"
-  integration_uri      = length(data.aws_lambda_function.existing_lambda) > 0 ? data.aws_lambda_function.existing_lambda.arn : aws_lambda_function.express_lambda[0].arn
-  payload_format_version = "2.0"
+resource "aws_api_gateway_resource" "proxy" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "{proxy+}"
 }
 
-resource "aws_apigatewayv2_route" "lambda_route" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "$default"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+resource "aws_api_gateway_method" "any_method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.proxy.id
+  http_method   = "ANY"
+  authorization = "NONE"
 }
 
-resource "aws_apigatewayv2_stage" "api_stage" {
-  api_id      = aws_apigatewayv2_api.http_api.id
-  name        = "$default"
-  auto_deploy = true
+resource "aws_api_gateway_integration" "lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.proxy.id
+  http_method             = aws_api_gateway_method.any_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.my_lambda_function.invoke_arn
 }
 
-output "api_url" {
-  description = "The URL of the API Gateway endpoint"
-  value       = aws_apigatewayv2_api.http_api.api_endpoint
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on = [aws_api_gateway_integration.lambda_integration]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = "prod"
+}
+
+resource "aws_lambda_permission" "allow_api_gateway" {
+  statement_id  = "AllowAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.my_lambda_function.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*"
+}
+
+output "api_gateway_url" {
+  value = "${aws_api_gateway_deployment.deployment.invoke_url}/"
 }
