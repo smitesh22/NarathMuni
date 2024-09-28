@@ -5,7 +5,6 @@ const app = express();
 
 app.use("/", routes);
 
-
-
+console.log(app);
 
 module.exports = app;
