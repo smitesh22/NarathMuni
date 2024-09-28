@@ -89,8 +89,8 @@ resource "aws_lambda_function" "my_lambda_function" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
-  s3_bucket        = data.aws_s3_bucket.existing_bucket.id
-  s3_key           = aws_s3_object.app_zip.key
+  s3_bucket        = "narath-muni-v3"
+  s3_key           = "app.zip"
   source_code_hash = filebase64sha256("../app.zip")
 
   environment {
