@@ -42,8 +42,15 @@ output "bucket_exists" {
   value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? "Bucket exists" : "Bucket created"
 }
 
-# Create the IAM role
+# Data source for existing IAM Role
+data "aws_iam_role" "existing_role" {
+  count = length(data.aws_iam_role.existing_role.id) == 0 ? 1 : 0
+  name  = "narath_muni_lambda_role"
+}
+
+# Create the IAM role if it does not exist
 resource "aws_iam_role" "new_role" {
+  count = length(data.aws_iam_role.existing_role) == 0 ? 1 : 0
   name  = "narath_muni_lambda_role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -63,8 +70,15 @@ output "role_exists" {
   value = "Role created"
 }
 
-# Create the IAM policy
+# Data source for existing IAM Policy
+data "aws_iam_policy" "existing_policy" {
+  count = length(data.aws_iam_policy.existing_policy.id) == 0 ? 1 : 0
+  name  = "narath_muni_lambda_policy"
+}
+
+# Create the IAM policy if it does not exist
 resource "aws_iam_policy" "new_policy" {
+  count = length(data.aws_iam_policy.existing_policy) == 0 ? 1 : 0
   name        = "narath_muni_lambda_policy"
   description = "IAM policy for Narath Muni Lambda functions"
   
@@ -91,12 +105,12 @@ output "policy_exists" {
 # Create the Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = aws_iam_role.new_role.arn
+  role          = aws_iam_role.new_role[0].arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
-  s3_key         = aws_s3_bucket_object.app_zip.key  # Use the uploaded app.zip key
+  s3_key         = aws_s3_bucket_object.app_zip.id  # Use the uploaded app.zip id
 
   source_code_hash = filebase64sha256("../app.zip")
 
