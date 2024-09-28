@@ -30,6 +30,14 @@ resource "aws_s3_bucket" "new_bucket" {
   bucket = "narath-muni-v3"
 }
 
+# Upload the app.zip file to S3
+resource "aws_s3_bucket_object" "app_zip" {
+  bucket = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
+  key    = "app.zip"          # This is the name that will be used in the bucket
+  source = "../app.zip"       # Path to your local app.zip file
+  acl    = "private"          # Set the access control list
+}
+
 output "bucket_exists" {
   value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? "Bucket exists" : "Bucket created"
 }
@@ -88,7 +96,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   runtime       = "nodejs20.x"
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
-  s3_key         = "app.zip"
+  s3_key         = aws_s3_bucket_object.app_zip.key  # Use the uploaded app.zip key
 
   source_code_hash = filebase64sha256("../app.zip")
 
@@ -151,4 +159,8 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 
 output "api_gateway_url" {
   value = "${aws_api_gateway_deployment.deployment.invoke_url}/"
+}
+
+output "app_zip_uploaded" {
+  value = aws_s3_bucket_object.app_zip.id != "" ? "app.zip uploaded" : "Failed to upload app.zip"
 }
