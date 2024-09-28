@@ -118,7 +118,9 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 
   lifecycle {
-    prevent_destroy = false # Allows the function to be updated
+    # Enable updates without destroy
+    prevent_destroy = false 
+    ignore_changes  = [source_code_hash] # Ignore changes to the source code hash to allow easy updates
   }
 }
 
@@ -153,6 +155,10 @@ resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [aws_api_gateway_integration.lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = "prod"
+
+  lifecycle {
+    create_before_destroy = true # Ensure the new deployment is created before the old one is destroyed
+  }
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
@@ -163,9 +169,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*"
 
   lifecycle {
-    create_before_destroy = false
-    #prevent_destroy = false # Allows the permission to be updated
-    #ignore_changes  = [source_arn]  # Ignores changes to source_arn
+    create_before_destroy = true # Ensure the new permission is created before the old one is destroyed
   }
 }
 
