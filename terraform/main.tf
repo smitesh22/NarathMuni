@@ -71,7 +71,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
-  s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
+  s3_bucket      = "narath-muni-v3"
   s3_key         = "app.zip" # Use the uploaded app.zip ID
 
   source_code_hash = filebase64sha256("../app.zip")
