@@ -163,7 +163,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*"
 
   lifecycle {
-    create_before_detroy = false
+    create_before_destroy = false
     #prevent_destroy = false # Allows the permission to be updated
     #ignore_changes  = [source_arn]  # Ignores changes to source_arn
   }
