@@ -24,12 +24,79 @@ data "aws_s3_bucket" "lambda_bucket" {
   bucket = "narath-muni-v3" # Use the name of your existing bucket
 }
 
-data "aws_iam_role" "lambda_role" {
+# Create the bucket if it does not exist
+resource "aws_s3_bucket" "new_bucket" {
+  count  = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? 1 : 0
+  bucket = "narath-muni-v3"
+  
+  # Add additional configurations as needed
+}
+
+output "bucket_exists" {
+  value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? "Bucket exists" : "Bucket created"
+}
+
+# Attempt to find the existing IAM role
+data "aws_iam_role" "existing_role" {
   name = "narath_muni_lambda_role" # Use the name of your existing IAM role
 }
 
-data "aws_iam_policy" "lambda_policy" {
+# Create the IAM role if it does not exist
+resource "aws_iam_role" "new_role" {
+  count = length(data.aws_iam_role.existing_role.id) == 0 ? 1 : 0
+  name  = "narath_muni_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  # Add other configurations as needed
+}
+
+output "role_exists" {
+  value = length(data.aws_iam_role.existing_role.id) > 0 ? "Role exists" : "Role created"
+}
+
+# Attempt to find the existing IAM policy
+data "aws_iam_policy" "existing_policy" {
   arn = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
+}
+
+# Create the IAM policy if it does not exist
+resource "aws_iam_policy" "new_policy" {
+  count = length(data.aws_iam_policy.existing_policy.id) == 0 ? 1 : 0
+  name  = "narath_muni_lambda_policy"
+  
+  description = "IAM policy for Narath Muni Lambda functions"
+  
+  # Define the policy document here
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:*",
+          "s3:*", # Adjust the actions as per your requirements
+          "lambda:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+output "policy_exists" {
+  value = length(data.aws_iam_policy.existing_policy.id) > 0 ? "Policy exists" : "Policy created"
 }
 
 # Use the data sources in your Lambda function configuration
@@ -88,13 +155,7 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name  = "prod"
 }
 
-data "aws_lambda_permission" "existing_permission" {
-  function_name = aws_lambda_function.my_lambda_function.function_name
-  statement_id  = "AllowAPIGateway"
-}
-
 resource "aws_lambda_permission" "allow_api_gateway" {
-  count         = length(data.aws_lambda_permission.existing_permission.*.id) == 0 ? 1 : 0
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.my_lambda_function.function_name
