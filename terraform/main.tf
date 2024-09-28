@@ -39,9 +39,10 @@ data "aws_lambda_function" "existing_lambda" {
   function_name = "narath_muni"  # The name of your existing Lambda function
 }
 
-# Data source for existing API Gateway
+# Use specific ID for the existing API Gateway
 data "aws_api_gateway_rest_api" "existing_api" {
-  name = "Narath-Muni_API"  # The name of your existing API Gateway
+  # Use the specific ID to avoid multiple matches
+  rest_api_id = "90dazif98g"
 }
 
 # Data source for existing API Gateway Resources
