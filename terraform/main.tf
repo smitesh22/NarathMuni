@@ -18,6 +18,7 @@ terraform {
 
 provider "aws" {
   region  = var.region
+  profile = "smitesh"
 }
 
 variable "region" {
