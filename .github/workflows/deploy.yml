@@ -52,5 +52,5 @@ jobs:
         working-directory: ./terraform
 
       - name: Apply Terraform
-        run: terraform apply -auto-approve -replace="aws_iam_role.new_role" -replace="aws_iam_policy.new_policy"
+        run: terraform apply"
         working-directory: ./terraform
