@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" # Use a recent version
+      version = "~> 5.0"
     }
   }
 
@@ -19,33 +19,24 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-# Data sources for existing resources
+# Data source for existing S3 bucket
 data "aws_s3_bucket" "existing_bucket" {
-  bucket = "narath-muni-v3" # Use the name of your existing bucket
+  bucket = "narath-muni-v3"
 }
 
 # Create the bucket if it does not exist
 resource "aws_s3_bucket" "new_bucket" {
   count  = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? 1 : 0
   bucket = "narath-muni-v3"
-  
-  # Add additional configurations as needed
 }
 
 output "bucket_exists" {
   value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? "Bucket exists" : "Bucket created"
 }
 
-# Attempt to find the existing IAM role
-data "aws_iam_role" "existing_role" {
-  name = "narath_muni_lambda_role"
-}
-
-# Create the IAM role if it does not exist
+# Create the IAM role
 resource "aws_iam_role" "new_role" {
-  count = length(data.aws_iam_role.existing_role.id) == 0 ? 1 : 0
   name  = "narath_muni_lambda_role"
-
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -58,27 +49,17 @@ resource "aws_iam_role" "new_role" {
       }
     ]
   })
-
-  # Add other configurations as needed
 }
 
 output "role_exists" {
-  value = length(data.aws_iam_role.existing_role.id) > 0 ? "Role exists" : "Role created"
+  value = "Role created"
 }
 
-# Attempt to find the existing IAM policy
-data "aws_iam_policy" "existing_policy" {
-  arn = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
-}
-
-# Create the IAM policy if it does not exist
+# Create the IAM policy
 resource "aws_iam_policy" "new_policy" {
-  count = length(data.aws_iam_policy.existing_policy.id) == 0 ? 1 : 0
-  name  = "narath_muni_lambda_policy"
-  
+  name        = "narath_muni_lambda_policy"
   description = "IAM policy for Narath Muni Lambda functions"
   
-  # Define the policy document here
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -86,7 +67,7 @@ resource "aws_iam_policy" "new_policy" {
         Effect = "Allow"
         Action = [
           "logs:*",
-          "s3:*", # Adjust the actions as per your requirements
+          "s3:*",
           "lambda:*"
         ]
         Resource = "*"
@@ -96,20 +77,20 @@ resource "aws_iam_policy" "new_policy" {
 }
 
 output "policy_exists" {
-  value = length(data.aws_iam_policy.existing_policy.id) > 0 ? "Policy exists" : "Policy created"
+  value = "Policy created"
 }
 
-# Use the data sources in your Lambda function configuration
+# Create the Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
+  role          = aws_iam_role.new_role.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
-  s3_key         = "app.zip" 
+  s3_key         = "app.zip"
 
-  source_code_hash = filebase64sha256("../app.zip") 
+  source_code_hash = filebase64sha256("../app.zip")
 
   environment {
     variables = {
@@ -118,10 +99,11 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 
   lifecycle {
-    prevent_destroy = false # Allows the function to be updated
+    prevent_destroy = false
   }
 }
 
+# API Gateway resources
 resource "aws_api_gateway_rest_api" "api" {
   name        = "Narath-Muni_API"
   description = "API Gateway for my Node.js server"
