@@ -52,7 +52,7 @@ data "aws_api_gateway_resource" "root_resource" {
 
 data "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path_part   = "{proxy+}"
+  path   = "{proxy+}"
   parent_id   = data.aws_api_gateway_resource.root_resource.id
 }
 
