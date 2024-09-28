@@ -24,10 +24,36 @@ data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
 }
 
-# Create the bucket if it does not exist
-resource "aws_s3_bucket" "new_bucket" {
-  count  = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? 1 : 0
-  bucket = "narath-muni-v3"
+# Data source for existing IAM Role
+data "aws_iam_role" "existing_role" {
+  name = "narath_muni_lambda_role"
+}
+
+# Data source for existing IAM Policy
+data "aws_iam_policy" "existing_policy" {
+  name = "narath_muni_lambda_policy"
+}
+
+# Data source for existing Lambda function
+data "aws_lambda_function" "existing_lambda" {
+  function_name = "narath_muni"  # The name of your existing Lambda function
+}
+
+# Data source for existing API Gateway
+data "aws_api_gateway_rest_api" "existing_api" {
+  name = "Narath-Muni_API"  # The name of your existing API Gateway
+}
+
+# Data source for existing API Gateway Resources
+data "aws_api_gateway_resource" "root_resource" {
+  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
+  path_part   = ""  # This refers to the root resource
+}
+
+data "aws_api_gateway_resource" "proxy_resource" {
+  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
+  path_part   = "{proxy+}"
+  parent_id   = data.aws_api_gateway_resource.root_resource.id
 }
 
 # Upload the app.zip file to S3
@@ -38,74 +64,12 @@ resource "aws_s3_bucket_object" "app_zip" {
   acl    = "private"          # Set the access control list
 }
 
-output "bucket_exists" {
-  value = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? "Bucket exists" : "Bucket created"
-}
-
-# Data source for existing IAM Role
-data "aws_iam_role" "existing_role" {
-  name = "narath_muni_lambda_role"
-}
-
-# Create the IAM role if it does not exist
-resource "aws_iam_role" "new_role" {
-  count = length(data.aws_iam_role.existing_role) == 0 ? 1 : 0
-  name  = "narath_muni_lambda_role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-output "role_exists" {
-  value = length(data.aws_iam_role.existing_role.id) > 0 ? "Role exists" : "Role created"
-}
-
-# Data source for existing IAM Policy
-data "aws_iam_policy" "existing_policy" {
-  name = "narath_muni_lambda_policy"
-}
-
-# Create the IAM policy if it does not exist
-resource "aws_iam_policy" "new_policy" {
-  count = length(data.aws_iam_policy.existing_policy) == 0 ? 1 : 0
-  name        = "narath_muni_lambda_policy"
-  description = "IAM policy for Narath Muni Lambda functions"
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:*",
-          "s3:*",
-          "lambda:*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-output "policy_exists" {
-  value = length(data.aws_iam_policy.existing_policy) > 0 ? "Policy exists" : "Policy created"
-}
-
-# Create or update the Lambda function
+# Update the existing Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
-  function_name = "narath_muni"
+  function_name = data.aws_lambda_function.existing_lambda.function_name
   role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  handler       = data.aws_lambda_function.existing_lambda.handler
+  runtime       = data.aws_lambda_function.existing_lambda.runtime
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
   s3_key         = "app.zip" # Use the uploaded app.zip ID
@@ -123,37 +87,26 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 }
 
-# API Gateway resources
-resource "aws_api_gateway_rest_api" "api" {
-  name        = "Narath-Muni_API"
-  description = "API Gateway for my Node.js server"
-}
-
-resource "aws_api_gateway_resource" "proxy" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "{proxy+}"
-}
-
-resource "aws_api_gateway_method" "any_method" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.proxy.id
+# API Gateway integration for the proxy resource
+resource "aws_api_gateway_method" "proxy_any" {
+  rest_api_id   = data.aws_api_gateway_rest_api.existing_api.id
+  resource_id   = data.aws_api_gateway_resource.proxy_resource.id
   http_method   = "ANY"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "lambda_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.api.id
-  resource_id             = aws_api_gateway_resource.proxy.id
-  http_method             = aws_api_gateway_method.any_method.http_method
+resource "aws_api_gateway_integration" "proxy_lambda_integration" {
+  rest_api_id             = data.aws_api_gateway_rest_api.existing_api.id
+  resource_id             = data.aws_api_gateway_resource.proxy_resource.id
+  http_method             = aws_api_gateway_method.proxy_any.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.my_lambda_function.invoke_arn
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.lambda_integration]
-  rest_api_id = aws_api_gateway_rest_api.api.id
+  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
+  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
   stage_name  = "prod"
 
   lifecycle {
@@ -166,7 +119,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.my_lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*"
+  source_arn    = "${data.aws_api_gateway_rest_api.existing_api.execution_arn}/*"
 
   lifecycle {
     create_before_destroy = false
