@@ -20,7 +20,7 @@ variable "region" {
 }
 
 # Data sources for existing resources
-data "aws_s3_bucket" "lambda_bucket" {
+data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3" # Use the name of your existing bucket
 }
 
@@ -102,11 +102,11 @@ output "policy_exists" {
 # Use the data sources in your Lambda function configuration
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = data.aws_iam_role.lambda_role.arn
+  role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
-  s3_bucket      = data.aws_s3_bucket.lambda_bucket.id
+  s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
   s3_key         = "app.zip" 
 
   source_code_hash = filebase64sha256("../app.zip") 
