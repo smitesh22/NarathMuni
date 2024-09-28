@@ -47,7 +47,7 @@ data "aws_api_gateway_rest_api" "existing_api" {
 # Data source for existing API Gateway Resources
 data "aws_api_gateway_resource" "root_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path_part   = ""  # This refers to the root resource
+  path_part   = "/"  # This refers to the root resource
 }
 
 data "aws_api_gateway_resource" "proxy_resource" {
@@ -57,7 +57,7 @@ data "aws_api_gateway_resource" "proxy_resource" {
 }
 
 # Upload the app.zip file to S3
-resource "aws_s3_bucket_object" "app_zip" {
+resource "aws_s3_object" "app_zip" {
   bucket = "narath-muni-v3"
   key    = "app.zip"          # This is the name that will be used in the bucket
   source = "../app.zip"       # Path to your local app.zip file
@@ -67,7 +67,7 @@ resource "aws_s3_bucket_object" "app_zip" {
 # Update the existing Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = data.aws_lambda_function.existing_lambda.function_name
-  role          = "narath_muni_lambda_role"
+  role          = "arn:aws:iam::590183816897:role/narath_muni_lambda_role"
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
