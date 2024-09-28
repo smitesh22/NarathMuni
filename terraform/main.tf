@@ -34,30 +34,6 @@ data "aws_s3_bucket" "existing_bucket" {
 data "aws_iam_role" "existing_role" {
   name = "narath_muni_lambda_role"
 }
-
-# Data source for existing Lambda function
-data "aws_lambda_function" "existing_lambda" {
-  function_name = "narath_muni"
-}
-
-# Data source for existing API Gateway
-data "aws_api_gateway_rest_api" "existing_api" {
-  name = "Narath-Muni_API"
-}
-
-# Data source for existing API Gateway Resources
-data "aws_api_gateway_resource" "root_resource" {
-  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path        = "/" 
-}
-
-# Create the proxy resource for the API Gateway
-resource "aws_api_gateway_resource" "proxy_resource" {
-  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  parent_id   = data.aws_api_gateway_resource.root_resource.id
-  path_part   = "{proxy+}"
-}
-
 # Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
   bucket = data.aws_s3_bucket.existing_bucket.id
