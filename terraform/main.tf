@@ -92,7 +92,10 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*"
 
   lifecycle {
-    ignore_changes = [statement_id]
+    replace_triggered_by = [
+      aws_lambda_function.my_lambda_function.arn, 
+      aws_api_gateway_rest_api.api.execution_arn  
+    ]
   }
 }
 
