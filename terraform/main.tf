@@ -19,6 +19,12 @@ variable "region" {
   default     = "eu-west-1"
 }
 
+variable "app_zip" {
+  description = "The name of the application zip file"
+  type        = string
+  default     = "app.zip"
+}
+
 # Data source for existing S3 bucket
 data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
@@ -29,40 +35,35 @@ data "aws_iam_role" "existing_role" {
   name = "narath_muni_lambda_role"
 }
 
-# Data source for existing IAM Policy
-data "aws_iam_policy" "existing_policy" {
-  name = "narath_muni_lambda_policy"
-}
-
 # Data source for existing Lambda function
 data "aws_lambda_function" "existing_lambda" {
-  function_name = "narath_muni"  # The name of your existing Lambda function
+  function_name = "narath_muni"
 }
 
-# Data source for existing API Gateway using its name
+# Data source for existing API Gateway
 data "aws_api_gateway_rest_api" "existing_api" {
-  name = "Narath-Muni_API"  # Use the specific name of the API
+  name = "Narath-Muni_API"
 }
 
 # Data source for existing API Gateway Resources
 data "aws_api_gateway_resource" "root_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path        = "/"  # Use 'path' for the root resource
+  path        = "/" 
 }
 
 # Create the proxy resource for the API Gateway
 resource "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  parent_id   = data.aws_api_gateway_resource.root_resource.id  # Nested under the root resource
-  path_part   = "{proxy+}"  # Define the proxy path
+  parent_id   = data.aws_api_gateway_resource.root_resource.id
+  path_part   = "{proxy+}"
 }
 
 # Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
-  bucket = data.aws_s3_bucket.existing_bucket.id  # Use the existing bucket
-  key    = "app.zip"          # This is the name that will be used in the bucket
-  source = "../app.zip"       # Path to your local app.zip file
-  acl    = "private"          # Set the access control list
+  bucket = data.aws_s3_bucket.existing_bucket.id
+  key    = var.app_zip
+  source = "../${var.app_zip}"
+  acl    = "private"
 }
 
 # Update the existing Lambda function
@@ -72,10 +73,10 @@ resource "aws_lambda_function" "my_lambda_function" {
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
-  s3_bucket      = data.aws_s3_bucket.existing_bucket.id  # Use the existing bucket
-  s3_key         = "app.zip" # Use the uploaded app.zip ID
+  s3_bucket      = data.aws_s3_bucket.existing_bucket.id
+  s3_key         = var.app_zip
 
-  source_code_hash = filebase64sha256("../app.zip")
+  source_code_hash = filebase64sha256("../${var.app_zip}")
 
   environment {
     variables = {
@@ -84,14 +85,14 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 
   lifecycle {
-    create_before_destroy = true  # Allows update without needing to destroy
+    create_before_destroy = true
   }
 }
 
 # Define the API Gateway method for the proxy resource
 resource "aws_api_gateway_method" "proxy_any" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  resource_id = aws_api_gateway_resource.proxy_resource.id  # Use the ID of the newly created proxy resource
+  resource_id = aws_api_gateway_resource.proxy_resource.id
   http_method = "ANY"
   authorization = "NONE"
 }
@@ -113,10 +114,6 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   function_name = aws_lambda_function.my_lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${data.aws_api_gateway_rest_api.existing_api.execution_arn}/*"
-
-  lifecycle {
-    create_before_destroy = false
-  }
 }
 
 # Deploy the API Gateway
@@ -126,7 +123,7 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name  = "prod"
 
   lifecycle {
-    create_before_destroy = false
+    create_before_destroy = true
   }
 }
 
@@ -136,5 +133,5 @@ output "api_gateway_url" {
 }
 
 output "app_zip_uploaded" {
-  value = aws_s3_object.app_zip.id != "" ? "app.zip uploaded" : "Failed to upload app.zip"
+  value = aws_s3_object.app_zip.id != "" ? "${var.app_zip} uploaded" : "Failed to upload ${var.app_zip}"
 }
