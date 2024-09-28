@@ -53,5 +53,5 @@ jobs:
         working-directory: ./terraform
 
       - name: Apply Terraform
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -replace="resource_type.resource_name"
         working-directory: ./terraform
