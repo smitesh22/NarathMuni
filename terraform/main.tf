@@ -59,7 +59,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
   role          = data.aws_iam_role.existing_role.arn
   handler       = "index.handler"  # Update with your actual handler
-  runtime       = "nodejs14.x"      # Change to your runtime
+  runtime       = "nodejs20.x"      # Change to your runtime
 
   s3_bucket      = data.aws_s3_bucket.existing_bucket.id
   s3_key         = var.app_zip
@@ -87,7 +87,7 @@ resource "aws_api_gateway_rest_api" "my_api" {
 resource "aws_api_gateway_resource" "root_resource" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
-  path_part   = ""  # Path part should be set correctly
+  path_part   = "/"  # Path part should be set correctly
 }
 
 # Create the proxy resource for the API Gateway
