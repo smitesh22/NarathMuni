@@ -58,7 +58,7 @@ data "aws_api_gateway_resource" "proxy_resource" {
 
 # Upload the app.zip file to S3
 resource "aws_s3_bucket_object" "app_zip" {
-  bucket = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
+  bucket = "narath-muni-v3"
   key    = "app.zip"          # This is the name that will be used in the bucket
   source = "../app.zip"       # Path to your local app.zip file
   acl    = "private"          # Set the access control list
@@ -67,7 +67,7 @@ resource "aws_s3_bucket_object" "app_zip" {
 # Update the existing Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = data.aws_lambda_function.existing_lambda.function_name
-  role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
+  role          = "narath_muni_lambda_role"
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
