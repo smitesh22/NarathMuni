@@ -38,13 +38,12 @@ output "bucket_exists" {
 
 # Attempt to find the existing IAM role
 data "aws_iam_role" "existing_role" {
-  count = length(aws_iam_role.new_role) == 0 ? 1 : 0 # Check if new_role is not created
-  name  = "narath_muni_lambda_role"
+  name = "narath_muni_lambda_role"
 }
 
 # Create the IAM role if it does not exist
 resource "aws_iam_role" "new_role" {
-  count = length(data.aws_iam_role.existing_role) == 0 ? 1 : 0
+  count = length(data.aws_iam_role.existing_role.id) == 0 ? 1 : 0
   name  = "narath_muni_lambda_role"
 
   assume_role_policy = jsonencode({
@@ -64,18 +63,17 @@ resource "aws_iam_role" "new_role" {
 }
 
 output "role_exists" {
-  value = length(data.aws_iam_role.existing_role) > 0 ? "Role exists" : "Role created"
+  value = length(data.aws_iam_role.existing_role.id) > 0 ? "Role exists" : "Role created"
 }
 
 # Attempt to find the existing IAM policy
 data "aws_iam_policy" "existing_policy" {
-  count = length(aws_iam_policy.new_policy) == 0 ? 1 : 0 # Check if new_policy is not created
-  arn   = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
+  arn = "arn:aws:iam::590183816897:policy/narath_muni_lambda_policy" # Use the correct ARN of your IAM policy
 }
 
 # Create the IAM policy if it does not exist
 resource "aws_iam_policy" "new_policy" {
-  count = length(data.aws_iam_policy.existing_policy) == 0 ? 1 : 0
+  count = length(data.aws_iam_policy.existing_policy.id) == 0 ? 1 : 0
   name  = "narath_muni_lambda_policy"
   
   description = "IAM policy for Narath Muni Lambda functions"
@@ -98,13 +96,13 @@ resource "aws_iam_policy" "new_policy" {
 }
 
 output "policy_exists" {
-  value = length(data.aws_iam_policy.existing_policy) > 0 ? "Policy exists" : "Policy created"
+  value = length(data.aws_iam_policy.existing_policy.id) > 0 ? "Policy exists" : "Policy created"
 }
 
 # Use the data sources in your Lambda function configuration
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = length(data.aws_iam_role.existing_role) > 0 ? data.aws_iam_role.existing_role[0].arn : aws_iam_role.new_role[0].arn
+  role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
