@@ -10,7 +10,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
+  region  = var.region
+  profile = "smitesh"
 }
 
 variable "region" {
@@ -31,9 +32,51 @@ variable "lambda_role_name" {
   default     = "narath_muni_lambda_role"
 }
 
-# Data source for existing IAM Role
-data "aws_iam_role" "existing_role" {
-  name = var.lambda_role_name
+# Create the IAM role for the Lambda function
+resource "aws_iam_role" "lambda_role" {
+  name               = var.lambda_role_name
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
+}
+
+# Assume role policy for Lambda function
+data "aws_iam_policy_document" "lambda_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+# Inline policy for the Lambda role
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.lambda_role_name}_policy"
+  description = "Policy for Lambda function to access S3 and CloudWatch logs"
+  
+  policy = data.aws_iam_policy_document.lambda_policy.json
+}
+
+# Policy document for the Lambda function
+data "aws_iam_policy_document" "lambda_policy" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "s3:GetObject",
+      "s3:PutObject"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+# Attach the policy to the IAM role
+resource "aws_iam_role_policy_attachment" "lambda_role_policy_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
 # Data source for existing S3 bucket
@@ -41,25 +84,24 @@ data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
 }
 
-# Create an S3 bucket for the application zip if it doesn't exist
-resource "aws_s3_bucket" "app_bucket" {
-  count  = data.aws_s3_bucket.existing_bucket.id != "" ? 0 : 1  # Create if not exists
-  bucket = "narath-muni-v3"
-}
-
 # Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
   bucket = data.aws_s3_bucket.existing_bucket.id
-  key    = var.app_zip
-  source = "../${var.app_zip}"
+  key    = "app.zip"
+  source = "../app.zip"
+
+  # Ensure that the object is always updated
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-# Create the new Lambda function
+# Create a new Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = data.aws_iam_role.existing_role.arn
+  role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"  # Update with your actual handler
-  runtime       = "nodejs20.x"      # Change to your runtime
+  runtime       = "nodejs20.x"      # Ensure the runtime is set to Node.js 20
 
   s3_bucket      = data.aws_s3_bucket.existing_bucket.id
   s3_key         = var.app_zip
@@ -83,17 +125,10 @@ resource "aws_api_gateway_rest_api" "my_api" {
   description = "API for Narath Muni"
 }
 
-# Create the root resource for the API Gateway
-resource "aws_api_gateway_resource" "root_resource" {
-  rest_api_id = aws_api_gateway_rest_api.my_api.id
-  parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
-  path_part   = ""   # Path part should be set correctly
-}
-
 # Create the proxy resource for the API Gateway
 resource "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  parent_id   = aws_api_gateway_resource.root_resource.id
+  parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
   path_part   = "{proxy+}"
 }
 
@@ -141,5 +176,5 @@ output "api_gateway_url" {
 }
 
 output "app_zip_uploaded" {
-  value = aws_s3_object.app_zip.id != "" ? "${var.app_zip} uploaded" : "Failed to upload ${var.app_zip}"
+  value = aws_s3_object.app_zip.id != "" ? "${var.app_zip} uploaded successfully to S3." : "Failed to upload ${var.app_zip}."
 }
