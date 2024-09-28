@@ -11,7 +11,6 @@ terraform {
     key            = "terraform/state/app/terraform.tfstate"
     region         = "eu-west-1"
     encrypt        = true
-    dynamodb_table = "terraform-locks"  # Optional for state locking
   }
 
   required_version = ">= 1.0"
