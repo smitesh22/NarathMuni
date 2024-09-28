@@ -59,7 +59,7 @@ resource "aws_api_gateway_resource" "proxy_resource" {
 
 # Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
-  bucket = "narath-muni-v3"
+  bucket = data.aws_s3_bucket.existing_bucket.id  # Use the existing bucket
   key    = "app.zip"          # This is the name that will be used in the bucket
   source = "../app.zip"       # Path to your local app.zip file
   acl    = "private"          # Set the access control list
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
-  s3_bucket      = "narath-muni-v3"
+  s3_bucket      = data.aws_s3_bucket.existing_bucket.id  # Use the existing bucket
   s3_key         = "app.zip" # Use the uploaded app.zip ID
 
   source_code_hash = filebase64sha256("../app.zip")
