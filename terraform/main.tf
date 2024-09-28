@@ -54,12 +54,18 @@ resource "aws_iam_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Upload the app.zip file to S3
+# Create an S3 bucket for the application zip
 resource "aws_s3_bucket" "app_bucket" {
   bucket = "narath-muni-v3"
+}
+
+# Create ACL for the S3 bucket
+resource "aws_s3_bucket_acl" "app_bucket_acl" {
+  bucket = aws_s3_bucket.app_bucket.id
   acl    = "private"
 }
 
+# Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
   bucket = aws_s3_bucket.app_bucket.id
   key    = var.app_zip
@@ -98,7 +104,8 @@ resource "aws_api_gateway_rest_api" "my_api" {
 # Create the root resource for the API Gateway
 resource "aws_api_gateway_resource" "root_resource" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  path        = "/"
+  parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
+  path_part   = ""
 }
 
 # Create the proxy resource for the API Gateway
