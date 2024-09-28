@@ -78,9 +78,10 @@ data "aws_s3_bucket" "existing_bucket" {
 }
 
 resource "aws_s3_object" "app_zip" {
-  bucket = data.aws_s3_bucket.existing_bucket.id
-  key    = var.app_zip
+  bucket = "narath-muni-v3"
+  key    = "app.zip"
   source = "../app.zip"
+  etag   = filemd5("../app.zip") 
 }
 
 resource "aws_lambda_function" "my_lambda_function" {
