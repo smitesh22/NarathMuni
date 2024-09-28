@@ -66,7 +66,7 @@ resource "aws_iam_role" "new_role" {
 }
 
 output "role_exists" {
-  value = length(data.aws_iam_role.existing_role) > 0 ? "Role exists" : "Role created"
+  value = length(data.aws_iam_role.existing_role.id) > 0 ? "Role exists" : "Role created"
 }
 
 # Data source for existing IAM Policy
@@ -103,12 +103,12 @@ output "policy_exists" {
 # Create the Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = length(data.aws_iam_role.existing_role) > 0 ? data.aws_iam_role.existing_role[0].arn : aws_iam_role.new_role[0].arn
+  role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
-  s3_key         = aws_s3_bucket_object.app_zip.key  # Use the uploaded app.zip key
+  s3_key         = aws_s3_bucket_object.app_zip.id  # Use the uploaded app.zip ID
 
   source_code_hash = filebase64sha256("../app.zip")
 
