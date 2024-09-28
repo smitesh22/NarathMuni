@@ -152,9 +152,5 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
 }
 
 output "api_gateway_url" {
-  value = "${aws_api_gateway_rest_api.my_api.execution_arn}/prod/"
-}
-
-output "api_gateway_url" {
   value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/prod/"
 }
