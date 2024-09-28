@@ -155,6 +155,6 @@ output "api_gateway_url" {
   value = "${aws_api_gateway_rest_api.my_api.execution_arn}/prod/"
 }
 
-output "app_zip_uploaded" {
-  value = "${var.app_zip} uploaded successfully to S3."
+output "api_gateway_url" {
+  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/prod/"
 }
