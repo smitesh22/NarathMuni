@@ -49,6 +49,10 @@ resource "aws_lambda_function" "my_lambda_function" {
       ENV = "PROD"
     }
   }
+
+  lifecycle {
+    prevent_destroy = false # Allows the function to be updated
+  }
 }
 
 resource "aws_api_gateway_rest_api" "api" {
@@ -92,7 +96,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*"
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = false # Allows the permission to be updated
   }
 }
 
