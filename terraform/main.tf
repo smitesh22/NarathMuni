@@ -50,9 +50,11 @@ data "aws_api_gateway_resource" "root_resource" {
   path        = "/"  # Use 'path' for the root resource
 }
 
-data "aws_api_gateway_resource" "proxy_resource" {
+# Create the proxy resource for the API Gateway
+resource "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path        = "{proxy+}"
+  parent_id   = data.aws_api_gateway_resource.root_resource.id  # Nested under the root resource
+  path_part   = "{proxy+}"  # Define the proxy path
 }
 
 # Upload the app.zip file to S3
@@ -86,33 +88,25 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 }
 
-# API Gateway integration for the proxy resource
+# Define the API Gateway method for the proxy resource
 resource "aws_api_gateway_method" "proxy_any" {
-  rest_api_id   = data.aws_api_gateway_rest_api.existing_api.id
-  resource_id   = data.aws_api_gateway_resource.proxy_resource.id
-  http_method   = "ANY"
+  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
+  resource_id = aws_api_gateway_resource.proxy_resource.id  # Use the ID of the newly created proxy resource
+  http_method = "ANY"
   authorization = "NONE"
 }
 
+# Define the API Gateway integration for the proxy resource
 resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   rest_api_id             = data.aws_api_gateway_rest_api.existing_api.id
-  resource_id             = data.aws_api_gateway_resource.proxy_resource.id
+  resource_id             = aws_api_gateway_resource.proxy_resource.id
   http_method             = aws_api_gateway_method.proxy_any.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.my_lambda_function.invoke_arn
 }
 
-resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
-  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  stage_name  = "prod"
-
-  lifecycle {
-    create_before_destroy = false
-  }
-}
-
+# Define the Lambda permission for the API Gateway to invoke the Lambda function
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -125,6 +119,18 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   }
 }
 
+# Deploy the API Gateway
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
+  rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
+  stage_name  = "prod"
+
+  lifecycle {
+    create_before_destroy = false
+  }
+}
+
+# Outputs
 output "api_gateway_url" {
   value = "${aws_api_gateway_deployment.deployment.invoke_url}/"
 }
