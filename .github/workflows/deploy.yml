@@ -39,7 +39,9 @@ jobs:
           aws-region: eu-west-1
 
       - name: Initialize Terraform
-        run: terraform init
+        run: |
+          terraform init
+          terraform import aws_lambda_function.my_lambda_function narath_muni || echo "Lambda function does not exist, skipping import."
         working-directory: ./terraform
         
       - name: Validate Terraform
