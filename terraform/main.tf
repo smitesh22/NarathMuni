@@ -52,8 +52,8 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name        = "${var.lambda_role_name}_policy"
-  policy      = data.aws_iam_policy_document.lambda_policy.json
+  name   = "${var.lambda_role_name}_policy"
+  policy = data.aws_iam_policy_document.lambda_policy.json
 }
 
 data "aws_iam_policy_document" "lambda_policy" {
@@ -100,27 +100,23 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 }
 
-# Declare the API Gateway resource
 resource "aws_api_gateway_rest_api" "my_api" {
   name = "Narath-Muni_API"
 }
 
-# Define the proxy resource for API Gateway
 resource "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
   path_part   = "{proxy+}"
 }
 
-# Define the API Gateway method for the proxy resource
 resource "aws_api_gateway_method" "proxy_any" {
-  rest_api_id = aws_api_gateway_rest_api.my_api.id
-  resource_id = aws_api_gateway_resource.proxy_resource.id
-  http_method = "ANY"
+  rest_api_id   = aws_api_gateway_rest_api.my_api.id
+  resource_id   = aws_api_gateway_resource.proxy_resource.id
+  http_method   = "ANY"
   authorization = "NONE"
 }
 
-# Define the API Gateway integration for Lambda
 resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.my_api.id
   resource_id             = aws_api_gateway_resource.proxy_resource.id
@@ -130,7 +126,6 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   uri                     = aws_lambda_function.my_lambda_function.invoke_arn
 }
 
-# Allow API Gateway to invoke Lambda function
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -139,14 +134,24 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.my_api.execution_arn}/*"
 }
 
-# API Gateway deployment
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on   = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id  = aws_api_gateway_rest_api.my_api.id
   stage_name   = "prod"
 }
 
-# Outputs
+# Add the DynamoDB table for Terraform state locking
+resource "aws_dynamodb_table" "terraform_state_lock" {
+  name         = "terraform-locks"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+
 output "api_gateway_url" {
   value = "${aws_api_gateway_rest_api.my_api.execution_arn}/prod/"
 }
