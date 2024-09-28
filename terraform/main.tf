@@ -108,7 +108,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   runtime       = "nodejs20.x"
 
   s3_bucket      = length(data.aws_s3_bucket.existing_bucket.id) > 0 ? data.aws_s3_bucket.existing_bucket.id : aws_s3_bucket.new_bucket[0].id
-  s3_key         = aws_s3_bucket_object.app_zip.id  # Use the uploaded app.zip ID
+  s3_key         = "app.zip" # Use the uploaded app.zip ID
 
   source_code_hash = filebase64sha256("../app.zip")
 
@@ -155,6 +155,10 @@ resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [aws_api_gateway_integration.lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = "prod"
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
