@@ -41,8 +41,6 @@ jobs:
       - name: Initialize Terraform
         run: |
           terraform init
-          terraform import aws_iam_role.new_role narath_muni_lambda_role
-          terraform import aws_iam_policy.new_policy narath_muni_lambda_policy
         working-directory: ./terraform
         
       - name: Validate Terraform
