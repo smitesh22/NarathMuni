@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and package the app
         run: |
-          zip -r app.zip . -x "*.git*" "*.github*" "*.terraform*" # Exclude unnecessary files, but include node_modules
+          zip -r app.zip . -x "*.git*" "*.github*" "*.terraform*" "terraform" # Exclude unnecessary files, but include node_modules
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
