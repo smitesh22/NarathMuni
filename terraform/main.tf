@@ -47,7 +47,7 @@ data "aws_api_gateway_rest_api" "existing_api" {
 # Data source for existing API Gateway Resources
 data "aws_api_gateway_resource" "root_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path_part   = "/"  # This refers to the root resource
+  path        = "/"  # Use 'path' instead of 'path_part'
 }
 
 data "aws_api_gateway_resource" "proxy_resource" {
@@ -67,7 +67,7 @@ resource "aws_s3_object" "app_zip" {
 # Update the existing Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = data.aws_lambda_function.existing_lambda.function_name
-  role          = "arn:aws:iam::590183816897:role/narath_muni_lambda_role"
+  role          = data.aws_iam_role.existing_role.arn
   handler       = data.aws_lambda_function.existing_lambda.handler
   runtime       = data.aws_lambda_function.existing_lambda.runtime
 
@@ -131,5 +131,5 @@ output "api_gateway_url" {
 }
 
 output "app_zip_uploaded" {
-  value = aws_s3_bucket_object.app_zip.id != "" ? "app.zip uploaded" : "Failed to upload app.zip"
+  value = aws_s3_object.app_zip.id != "" ? "app.zip uploaded" : "Failed to upload app.zip"
 }
