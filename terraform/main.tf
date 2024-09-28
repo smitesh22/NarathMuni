@@ -47,13 +47,12 @@ data "aws_api_gateway_rest_api" "existing_api" {
 # Data source for existing API Gateway Resources
 data "aws_api_gateway_resource" "root_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path        = "/"  # Use 'path' instead of 'path_part'
+  path        = "/"  # Use 'path' for the root resource
 }
 
 data "aws_api_gateway_resource" "proxy_resource" {
   rest_api_id = data.aws_api_gateway_rest_api.existing_api.id
-  path   = "{proxy+}"
-  parent_id   = data.aws_api_gateway_resource.root_resource.id
+  path        = "{proxy+}"
 }
 
 # Upload the app.zip file to S3
