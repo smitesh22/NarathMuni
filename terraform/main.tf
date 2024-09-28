@@ -31,43 +31,25 @@ variable "lambda_role_name" {
   default     = "narath_muni_lambda_role"
 }
 
-# Create a new IAM role for the Lambda function
-resource "aws_iam_role" "lambda_role" {
-  name               = var.lambda_role_name
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
+# Data source for existing IAM Role
+data "aws_iam_role" "existing_role" {
+  name = var.lambda_role_name
 }
 
-# Attach a policy to allow the Lambda function to write logs
-resource "aws_iam_policy_attachment" "lambda_logs" {
-  name       = "lambda_logs"
-  roles      = [aws_iam_role.lambda_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-# Create an S3 bucket for the application zip
-resource "aws_s3_bucket" "app_bucket" {
+# Data source for existing S3 bucket
+data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
 }
 
-# Create ACL for the S3 bucket
-resource "aws_s3_bucket_acl" "app_bucket_acl" {
-  bucket = aws_s3_bucket.app_bucket.id
-  acl    = "private"
+# Create an S3 bucket for the application zip if it doesn't exist
+resource "aws_s3_bucket" "app_bucket" {
+  count  = data.aws_s3_bucket.existing_bucket.id != "" ? 0 : 1  # Create if not exists
+  bucket = "narath-muni-v3"
 }
 
 # Upload the app.zip file to S3
 resource "aws_s3_object" "app_zip" {
-  bucket = aws_s3_bucket.app_bucket.id
+  bucket = data.aws_s3_bucket.existing_bucket.id
   key    = var.app_zip
   source = "../${var.app_zip}"
 }
@@ -75,11 +57,11 @@ resource "aws_s3_object" "app_zip" {
 # Create the new Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
-  role          = aws_iam_role.lambda_role.arn
+  role          = data.aws_iam_role.existing_role.arn
   handler       = "index.handler"  # Update with your actual handler
   runtime       = "nodejs14.x"      # Change to your runtime
 
-  s3_bucket      = aws_s3_bucket.app_bucket.id
+  s3_bucket      = data.aws_s3_bucket.existing_bucket.id
   s3_key         = var.app_zip
 
   source_code_hash = filebase64sha256("../${var.app_zip}")
@@ -105,7 +87,7 @@ resource "aws_api_gateway_rest_api" "my_api" {
 resource "aws_api_gateway_resource" "root_resource" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   parent_id   = aws_api_gateway_rest_api.my_api.root_resource_id
-  path_part   = ""
+  path_part   = ""  # Path part should be set correctly
 }
 
 # Create the proxy resource for the API Gateway
