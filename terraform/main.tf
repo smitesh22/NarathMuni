@@ -88,7 +88,13 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name  = "prod"
 }
 
+data "aws_lambda_permission" "existing_permission" {
+  function_name = aws_lambda_function.my_lambda_function.function_name
+  statement_id  = "AllowAPIGateway"
+}
+
 resource "aws_lambda_permission" "allow_api_gateway" {
+  count         = length(data.aws_lambda_permission.existing_permission.*.id) == 0 ? 1 : 0
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.my_lambda_function.function_name
