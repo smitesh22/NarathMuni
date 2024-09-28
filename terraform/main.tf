@@ -100,7 +100,7 @@ output "policy_exists" {
   value = length(data.aws_iam_policy.existing_policy) > 0 ? "Policy exists" : "Policy created"
 }
 
-# Create the Lambda function
+# Create or update the Lambda function
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "narath_muni"
   role          = length(data.aws_iam_role.existing_role.id) > 0 ? data.aws_iam_role.existing_role.arn : aws_iam_role.new_role[0].arn
@@ -119,7 +119,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    create_before_destroy = true  # Allows update without needing to destroy
   }
 }
 
