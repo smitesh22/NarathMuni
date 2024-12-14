@@ -1,4 +1,4 @@
-const app = require("./app/server");
+import app from "./app/server";
 require('dotenv').config();
 const port = 4000;
 app.listen(4000, () => {
