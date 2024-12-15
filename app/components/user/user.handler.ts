@@ -5,8 +5,15 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
     try {
         switch (req.method) {
             case 'GET': {
-                const users = await userService.getAllUsers();
-                res.json(users); // No return here
+                const id: number = Number(req.query.id);
+                if(id){
+                    const user = await userService.getUserById(id);
+                    console.log(user);
+                    res.json(user);
+                }else {
+                    const users = await userService.getAllUsers();
+                    res.json(users); // No return here
+                }
                 break;
             }
             case 'POST': {
