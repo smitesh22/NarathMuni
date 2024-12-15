@@ -21,6 +21,7 @@ export const UserModel = {
         })
     },
 
+
     getAllUsers: async () => {
         return await prisma.user.findMany()
     },
