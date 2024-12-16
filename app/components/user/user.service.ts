@@ -1,11 +1,11 @@
 import { UserModel } from '../../database/models/user'
 
 export const userService = {
-    createUser: (data: { email: string; firstName: string; lastName: string }) => {
+    createUser: (data: { id: string; email: any; firstName: any; lastName: any; hashedPassword: any }) => {
         return UserModel.createUser(data)
     },
 
-    getUserById: (id: number) => {
+    getUserById: (id: string) => {
         return UserModel.getUserById(id)
     },
 
@@ -13,11 +13,11 @@ export const userService = {
         return UserModel.getAllUsers()
     },
 
-    updateUser: (id: number, data: { email?: string; firstName?: string; lastName?: string }) => {
+    updateUser: (id: string, data: { email?: string; firstName?: string; lastName?: string }) => {
         return UserModel.updateUser(id, data)
     },
 
-    deleteUser: (id: number) => {
+    deleteUser: (id: string) => {
         return UserModel.deleteUser(id)
     },
 }

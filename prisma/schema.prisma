@@ -14,9 +14,10 @@ datasource db {
 }
 
 model User {
-  id        Int    @default(autoincrement()) @id
+  id        String @id
   email     String @unique
   firstName String
   lastName  String
+  hashedPassword String
   social    Json?
 }

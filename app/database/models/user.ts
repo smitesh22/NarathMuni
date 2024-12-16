@@ -1,41 +1,54 @@
-import prisma from '../prisma-client'
+import prisma from '../prisma-client';
+import { Prisma } from '@prisma/client';
 
+// Define the User interface (can be replaced with Prisma types directly if available)
 export interface User {
-    id: number
-    email: string
-    firstName: string
-    lastName: string
-    social?: Record<string, unknown> // Optional JSON field
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    hashedPassword: string;
+    social?: Record<string, unknown>; // Optional JSON field
 }
 
-export const UserModel = {
-    createUser: async (data: { email: string; firstName: string; lastName: string }) => {
+const UserModel = {
+    // Create a new user
+    createUser: async (data: Prisma.UserCreateInput) => {
         return await prisma.user.create({
             data,
-        })
+        });
     },
 
-    getUserById: async (id: number) => {
-        return await prisma.user.findUnique({
+    // Get a user by ID
+    getUserById: async (id: string) => {
+        const user = await prisma.user.findUnique({
             where: { id },
-        })
+        });
+        if (!user) {
+            throw new Error(`User with ID ${id} not found`);
+        }
+        return user;
     },
 
-
+    // Get all users
     getAllUsers: async () => {
-        return await prisma.user.findMany()
+        return await prisma.user.findMany();
     },
 
-    updateUser: async (id: number, data: { email?: string; firstName?: string; lastName?: string }) => {
+    // Update a user by ID
+    updateUser: async (id: string, data: Prisma.UserUpdateInput) => {
         return await prisma.user.update({
             where: { id },
             data,
-        })
+        });
     },
 
-    deleteUser: async (id: number) => {
+    // Delete a user by ID
+    deleteUser: async (id: string) => {
         return await prisma.user.delete({
             where: { id },
-        })
+        });
     },
-}
+};
+
+export default UserModel;
