@@ -11,7 +11,7 @@ export interface User {
     social?: Record<string, unknown>; // Optional JSON field
 }
 
-const UserModel = {
+export const UserModel = {
     // Create a new user
     createUser: async (data: Prisma.UserCreateInput) => {
         return await prisma.user.create({
@@ -26,6 +26,17 @@ const UserModel = {
         });
         if (!user) {
             throw new Error(`User with ID ${id} not found`);
+        }
+        return user;
+    },
+
+    getUserByEmail: async (email: string) => {
+        const user = await prisma.user.findUnique({
+            where: { email },
+        })
+
+        if (!user) {
+            throw new Error(`User with email ${email} not found`);
         }
         return user;
     },
@@ -51,4 +62,4 @@ const UserModel = {
     },
 };
 
-export default UserModel;
+UserModel;

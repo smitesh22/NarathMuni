@@ -8,13 +8,27 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
         switch (req.method) {
             case 'GET': {
                 const id  = req.query.id?.toString();
+                const email  = req.query.email?.toString();
+                let users;
                 if(id){
-                    const user = await userService.getUserById(id);
-                    res.json(user);
+                    try {
+                        users = await userService.getUserById(id);
+                        res.json(users);
+                    }catch (e) {
+                        res.status(404).send({message: `User with id ${id} not found`});
+                    }
+                }else if (email){
+                    try {
+                        users = await userService.getUserByEmail(email);
+                        res.json(users);
+                    }catch (e) {
+                        res.status(404).send({message: `User with email ${email} not found`});
+                    }
                 }else {
-                    const users = await userService.getAllUsers();
+                    users = await userService.getAllUsers();
                     res.json(users); // No return here
                 }
+
                 break;
             }
             case 'POST': {
