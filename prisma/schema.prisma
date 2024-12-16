@@ -21,3 +21,11 @@ model User {
   hashedPassword String
   social    Json?
 }
+
+model ContentObject {
+  id String @id
+  type String 
+  extensions Json
+  createdOn DateTime
+  updatedOn DateTime
+}
