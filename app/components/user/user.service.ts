@@ -9,6 +9,10 @@ export const userService = {
         return UserModel.getUserById(id)
     },
 
+    getUserByEmail: (email: string) => {
+        return UserModel.getUserByEmail(email)
+    },
+
     getAllUsers: () => {
         return UserModel.getAllUsers()
     },

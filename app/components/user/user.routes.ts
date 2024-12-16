@@ -1,9 +1,10 @@
 import express from "express";
-import handler from "./user.handler";  // Import the handler function directly
+import handler from "./user.handler";
+import {authenticate, verifyToken} from "./user.middleware";  // Import the handler function directly
 
 const router = express.Router();
 
-router.all("/user", handler);
+router.all("/user", verifyToken, handler);
 router.post("/register", handler);
-
+router.post("/login", authenticate);
 module.exports = router;
