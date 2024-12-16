@@ -1,14 +1,15 @@
 import { userService } from './user.service';
 import express from "express";
+import bcrypt from "bcryptjs";
+import {v4 as uuidv4} from "uuid";
 
 const handler = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
         switch (req.method) {
             case 'GET': {
-                const id: number = Number(req.query.id);
+                const id  = req.query.id?.toString();
                 if(id){
                     const user = await userService.getUserById(id);
-                    console.log(user);
                     res.json(user);
                 }else {
                     const users = await userService.getAllUsers();
@@ -17,10 +18,27 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                 break;
             }
             case 'POST': {
-                const { email, firstName, lastName } = req.body;
-                const newUser = await userService.createUser({ email, firstName, lastName });
-                res.status(201).json(newUser); // No return here
+                //register endpoint for creating a new user
+                if (req.url === "/user") {
+                    res.status(422).json({
+                        message: "Cannot send POST request on /user endpoint. Please use /register",
+                    });
+                    break;
+                }
+                const { email,firstName, lastName, password } = req.body;
+                const  users = await userService.getAllUsers();
+
+                if(users.some((user) => user.email === email)){
+                    res.status(400).json({message: "Email already exists"});
+                    break;
+                }
+
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+                const newUser = await userService.createUser({ id: uuidv4(), email, firstName, lastName, hashedPassword: hashedPassword });
+                res.status(201).json(newUser);
                 break;
+
             }
             case 'PUT': {
                 const { id, email, firstName, lastName } = req.body;
