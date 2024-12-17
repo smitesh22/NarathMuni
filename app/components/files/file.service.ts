@@ -15,8 +15,7 @@ export const fileService = {
                 // Generate unique filenames for uploaded files
                 const fileName = `content/${Date.now()}_${file.originalname}`;
                 cb(null, fileName);
-            },
-            acl: 'public-read',
+            }
         }),
     })
 }

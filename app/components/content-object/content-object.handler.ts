@@ -33,11 +33,12 @@ export default async function handler(req: express.Request, res: express.Respons
                         res.status(404).json({message: `No content found with id ${id}`});
                     }
                     res.status(200).json([user]);
-                }else{
+                    return;
+                }else {
                     const user = await contentObjectService.getContentObjects();
                     res.status(200).json(user);
+                    return;
                 }
-                break;
 
             case "DELETE":
                 const id = req.query.id as string;
