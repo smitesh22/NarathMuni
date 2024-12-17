@@ -7,6 +7,6 @@ async function generateUUID (req: express.Request, res: express.Response, next: 
   try {
     res.send(uuidv4());
   } catch (error) {
-    console.log("Error occured while fetching UUID");
+    console.error("Error occurred while fetching UUID");
   }
 };

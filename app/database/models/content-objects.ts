@@ -1,35 +1,37 @@
 import prisma from '../prisma-client';
-import { Prisma } from '@prisma/client';
-import {randomUUID} from "node:crypto";
-
-export interface ContentObject {
-    id: string;
-    type: string;
-    extension : object
-}
 
 export const ContentObjectsModel = {
     createContentObject: async (data: {
-        id: string,
-        type: string,
-        extensions: object,
-        createdOn: Date,
-        updatedOn: Date}) => {
+        id: string;
+        type: string;
+        extensions: object;
+        createdOn: Date;
+        updatedOn: Date;
+    }) => {
         return await prisma.contentObject.create({
-            data
+            data: {
+                id: data.id,
+                type: data.type,
+                extensions: data.extensions,
+                createdOn: data.createdOn,
+                updatedOn: data.updatedOn,
+            },
         });
     },
+
     getContentObjectById: async (id: string) => {
         return await prisma.contentObject.findUnique({
-            where: {id},
+            where: { id },
         });
     },
-    getContentObjects: async() => {
-        return await prisma.contentObject.findMany({})
+
+    getContentObjects: async () => {
+        return await prisma.contentObject.findMany({});
     },
-    deleteContentObjectById: async (id: string) => {
-        return await prisma.contentObject.deleteMany({
-            where: {id},
-        })
+
+    deleteContentObjectById: async (id: string): Promise<void> => {
+        await prisma.contentObject.deleteMany({
+            where: { id },
+        });
     }
-}
+};

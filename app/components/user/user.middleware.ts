@@ -1,16 +1,13 @@
 import passport from "./user.strategy";
 import express from "express";
 import jwt from "jsonwebtoken";
-
-
-const JWT_SECRET : string = process.env.JWT_SECRET as string;
+import {JWT_SECRET} from "../../secrets/secrets";
 
 export async function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
     passport.authenticate("local", { session: false }, (err: any, user: { id: any; email: any; }, info: { message: any; }) => {
         if (err) {
             return next(err);
         }
-        const JWT_SECRET : string = process.env.JWT_SECRET as string;
 
         if(!JWT_SECRET){
             return res.status(500).send({message:"Secret key is missing on the server."});
