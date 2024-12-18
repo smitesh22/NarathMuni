@@ -6,5 +6,6 @@ router.use(require("../components/uuid-generator/uuid-generator.routes"));
 router.use(require("../components/user/user.routes"));
 router.use(require("../components/content-object/content-object.routes"));
 router.use(require("../components/files/file.routes"));
+router.use(require("../components/open-ai/open-ai.routes"));
 
 export default router;
