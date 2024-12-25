@@ -1,23 +1,4 @@
-import { ContentObjectsModel } from "../../database/models/content-objects";
-import {JsonValue} from "@prisma/client/runtime/library";
-
-export interface ContentObject {
-    id: string;
-    type: string;
-    extensions: JsonValue;
-    updatedOn: Date;
-    createdOn: Date;
-}
-
-export interface ContentObjectExtensions {
-    [`content-object-extension/mimetype`]?: string;
-    [`content-object-extension/name`]?: string;
-    [`content-object-extension/size`]?: number;
-    [`content-object-extension/bucket`]?: string;
-    [`content-object-extension/location`]?: string;
-    [`content-object-extension/user`]?: string;
-}
-
+import {ContentObject, ContentObjectExtensions, ContentObjectsModel} from "../../database/models/content-objects";
 
 export const contentObjectService = {
     createContentObject: async (data: {

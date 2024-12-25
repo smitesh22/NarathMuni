@@ -9,7 +9,7 @@ export interface User {
     lastName: string;
     hashedPassword: string;
     verified: boolean;
-    social?: {
+    extensions: {
         expiry?: string;
         otp?: string;
     } | null;
@@ -17,10 +17,15 @@ export interface User {
 
 export const UserModel = {
     // Create a new user
-    createUser: async (data: Prisma.UserCreateInput) => {
-        return await prisma.user.create({
+    createUser: async (data: Prisma.UserCreateInput): Promise<User> => {
+        const newUser = await prisma.user.create({
             data,
         });
+
+        return {
+            ...newUser,
+            extensions: newUser.extensions as User['extensions'], // Cast to match the `User` type
+        };
     },
 
 
@@ -34,7 +39,7 @@ export const UserModel = {
 
         return {
             ...user,
-            social: user.social as User['social'], // Cast to match the `User` type
+            extensions: user.extensions as User['extensions'], // Cast to match the `User` type
         };
     },
 
@@ -49,7 +54,7 @@ export const UserModel = {
 
         return {
             ...user,
-            social: user.social as User['social'], // Cast to match the `User` type
+            extensions: user.extensions as User['extensions'], // Cast to match the `User` type
         };
     },
 
@@ -59,7 +64,7 @@ export const UserModel = {
 
         return users.map((user) => ({
             ...user,
-            social: user.social as User['social'],
+            extensions: user.extensions as User['extensions'],
         }));
     },
 
@@ -72,7 +77,7 @@ export const UserModel = {
 
         return {
             ...updatedUser,
-            social: updatedUser.social as User['social'], // Cast to match the `User` type
+            extensions: updatedUser.extensions as User['extensions'], // Cast to match the `User` type
         };
     },
 
@@ -83,7 +88,7 @@ export const UserModel = {
 
         return {
             ...deletedUser,
-            social: deletedUser.social as User['social'],
+            extensions: deletedUser.extensions as User['extensions'],
         };
     },
 };

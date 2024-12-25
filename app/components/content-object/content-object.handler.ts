@@ -28,15 +28,15 @@ export default async function handler(req: express.Request, res: express.Respons
             case "GET":
                 if(req.query.id) {
                     const id = req.query.id as string;
-                    const user = await contentObjectService.getContentObjectById(id);
-                    if (!user) {
+                    const contentObject = await contentObjectService.getContentObjectById(id);
+                    if (!contentObject) {
                         res.status(404).json({message: `No content found with id ${id}`});
                     }
-                    res.status(200).json([user]);
+                    res.status(200).json([contentObject]);
                     return;
                 }else {
-                    const user = await contentObjectService.getContentObjects();
-                    res.status(200).json(user);
+                    const contentObject = await contentObjectService.getContentObjects();
+                    res.status(200).json(contentObject);
                     return;
                 }
 
@@ -45,8 +45,8 @@ export default async function handler(req: express.Request, res: express.Respons
                 if(!id){
                     res.status(400).json({message: "id is required"});
                 }
-                const user = await contentObjectService.deleteContentObjectById(id);
-                res.status(204).json({user, message: "Content Object deleted successfully."});
+                const contentObject = await contentObjectService.deleteContentObjectById(id);
+                res.status(204).json({contentObject, message: "Content Object deleted successfully."});
                 break;
             default:
                 res.status(405).json({ message: "Method not allowed" });

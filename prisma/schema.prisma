@@ -20,7 +20,7 @@ model User {
   lastName  String
   hashedPassword String
   verified Boolean @default(false)
-  social    Json?
+  extensions    Json @default("{}")
 }
 
 model ContentObject {

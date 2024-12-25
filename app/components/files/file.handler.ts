@@ -1,8 +1,9 @@
 import express from 'express';
 import {contentObjectExtension, imageObjectType} from "../../constants/constants";
-import {ContentObjectExtensions, contentObjectService} from "../content-object/content-object.service";
+import {contentObjectService} from "../content-object/content-object.service";
 import {v4 as uuidv4} from "uuid";
 import {S3_CLOUDFRONT_NAME} from "../../secrets/secrets";
+import {ContentObjectExtensions} from "../../database/models/content-objects";
 
 interface fileWithS3 extends Express.Multer.File {
     location: string;
@@ -62,9 +63,8 @@ export default async function handler(req: express.Request, res: express.Respons
             }
 
             if (contentObject.extensions && typeof contentObject.extensions === 'object') {
-                // @ts-ignore
                 const filePath = contentObject.extensions[`${contentObjectExtension}/location`];
-                if (typeof filePath === 'string') {
+                if (filePath) {
                     const filename = filePath.split('/').pop() as string;
                     res.setHeader('Content-Disposition', `attachment; filename="${decodeURI(filename)}"`);
                     res.status(200).send(filePath);

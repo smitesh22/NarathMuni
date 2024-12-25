@@ -35,8 +35,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
             }
             case 'POST': {
                 //register endpoint for creating a new user
-
-                const createSocial = () => {
+                const createExtensions = () => {
                     const expiry = new Date();
                     expiry.setHours(expiry.getHours() + 1);
                     return {
@@ -73,7 +72,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                         firstName,
                         lastName,
                         hashedPassword: hashedPassword,
-                        social: createSocial()
+                        extensions: createExtensions()
                     });
                     res.status(201).json(newUser);
                     return;
@@ -86,16 +85,15 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                         res.status(400).send({message: `User with id ${id} not found`});
                     }
 
-                    if(user.social && user.social['expiry'] && user.social["otp"]){
-                        const expiryDate = new Date(user.social.expiry);
+                    if(user.extensions && user.extensions['expiry'] && user.extensions["otp"]){
+                        const expiryDate = new Date(user.extensions.expiry);
                         if(expiryDate < new Date()){
-                            await userService.updateUser(user.id, {social: createSocial()});
+                            await userService.updateUser(user.id, {extensions: createExtensions()});
                             res.status(201).json({})
                         }else{
-                            if(user.social['otp'] === code){
+                            if(user.extensions['otp'] === code){
                                 await userService.updateUser(user.id, {verified: true});
                             }
-                            console.log("yayaya");
                             res.status(201).json({
                                 message: 'User is verified'
                             });
@@ -103,7 +101,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     }
                     return;
                 }
-
+                return;
             }
             case 'PUT': {
                 const { id, email, firstName, lastName } = req.body;
