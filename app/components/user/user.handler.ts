@@ -77,12 +77,11 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     res.status(201).json(newUser);
                     return;
                 }else if(req.url === "/verify-user") {
-                    const {id, code} = req.body;
-
-                    const user: User = await userService.getUserById(id);
-
+                    const {email, code} = req.body;
+                    console.log(req.body);
+                    const user: User = await userService.getUserByEmail(email);
                     if(!user){
-                        res.status(400).send({message: `User with id ${id} not found`});
+                        res.status(400).send({message: `User with email ${email} not found`});
                     }
 
                     if(user.extensions && user.extensions['expiry'] && user.extensions["otp"]){

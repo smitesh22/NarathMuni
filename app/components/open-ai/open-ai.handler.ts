@@ -23,21 +23,23 @@ export default async function handler(req: express.Request, res: express.Respons
                         break;
                     }
 
-                    //TODO : TYPE FOR CONTENT OBJECT EXTENSION
-                    // @ts-ignore
                     const imageUrl = contentObject.extensions[`${contentObjectExtension}/location`]
-                    const imageResponse = await axios.get(imageUrl, {responseType: "arraybuffer"});
-                    const imageBuffer = Buffer.from(imageResponse.data);
 
-                    const extractedText = await openAIServices.extractTextFromImage(imageBuffer);
-                    const processedText = await openAIServices.getAPIResponse(extractedText);
+                    if(imageUrl) {
+                        const imageResponse = await axios.get(imageUrl, {responseType: "arraybuffer"});
+                        const imageBuffer = Buffer.from(imageResponse.data);
 
-                    const workbookBuffer = generateExcelFromReceipt(JSON.parse(processedText))
+                        const extractedText = await openAIServices.extractTextFromImage(imageBuffer);
+                        const processedText = await openAIServices.getAPIResponse(extractedText);
 
-                    //@ts-ignore
-                    res.setHeader('Content-Disposition', `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`);
-                    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    res.send(workbookBuffer);
+                        const workbookBuffer = generateExcelFromReceipt(JSON.parse(processedText))
+
+                        res.setHeader('Content-Disposition', `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`);
+                        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                        res.send(workbookBuffer);
+                    }else{
+                        res.status(404).send({message:"Image url does not exist"});
+                    }
                     break;
 
                 }catch(err){
