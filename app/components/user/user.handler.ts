@@ -34,10 +34,9 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                 break;
             }
             case 'POST': {
-                //register endpoint for creating a new user
                 const createExtensions = () => {
                     const expiry = new Date();
-                    expiry.setHours(expiry.getHours() + 1);
+                    expiry.setMinutes(expiry.getMinutes() + 1);
                     return {
                         otp: otpGenerator.generate(6, {
                             specialChars: false,
@@ -55,7 +54,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                 }
 
                 if(req.url === "/register") {
-                    console.log(req.body);
+;
                     const {email, firstName, lastName, password} = req.body;
                     const users = await userService.getAllUsers();
 
@@ -78,7 +77,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     return;
                 }else if(req.url === "/verify-user") {
                     const {email, code} = req.body;
-                    console.log(req.body);
+
                     const user: User = await userService.getUserByEmail(email);
                     if(!user){
                         res.status(400).send({message: `User with email ${email} not found`});
@@ -87,18 +86,32 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     if(user.extensions && user.extensions['expiry'] && user.extensions["otp"]){
                         const expiryDate = new Date(user.extensions.expiry);
                         if(expiryDate < new Date()){
-                            await userService.updateUser(user.id, {extensions: createExtensions()});
-                            res.status(201).json({})
+                            res.status(408).json({
+                                message: `Your token has expired, we send you a new token, please try again.`,
+                            })
                         }else{
                             if(user.extensions['otp'] === code){
                                 await userService.updateUser(user.id, {verified: true});
+                                res.status(201).json({
+                                    message: 'User is verified'
+                                });
+                            }else{
+                                res.status(401).send({message: `Unauthorized access token`});
                             }
-                            res.status(201).json({
-                                message: 'User is verified'
-                            });
                         }
                     }
                     return;
+                }else if(req.url === "/resend-token") {
+                    const {email} = req.body;
+
+                    const user: User = await userService.getUserByEmail(email);
+
+                    if(!user){
+                        res.status(400).send({message: `User with email ${email} not found`});
+                    }
+
+                    await userService.updateUser(user.id, {extensions: createExtensions()});
+                    res.status(201).json({message: "We have send you a new token"});
                 }
                 return;
             }
