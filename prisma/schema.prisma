@@ -19,6 +19,7 @@ model User {
   firstName String
   lastName  String
   hashedPassword String
+  verified Boolean @default(false)
   social    Json?
 }
 

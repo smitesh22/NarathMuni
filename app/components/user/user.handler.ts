@@ -2,6 +2,8 @@ import { userService } from './user.service';
 import express from "express";
 import bcrypt from "bcryptjs";
 import {v4 as uuidv4} from "uuid";
+import otpGenerator from "otp-generator";
+import {User} from "../../database/models/user";
 
 const handler = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
@@ -33,25 +35,74 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
             }
             case 'POST': {
                 //register endpoint for creating a new user
+
+                const createSocial = () => {
+                    const expiry = new Date();
+                    expiry.setHours(expiry.getHours() + 1);
+                    return {
+                        otp: otpGenerator.generate(6, {
+                            specialChars: false,
+                            lowerCaseAlphabets: false,
+                            upperCaseAlphabets: false
+                        }),
+                        expiry: expiry.toISOString(),
+                    }
+                }
                 if (req.url === "/user") {
                     res.status(422).json({
                         message: "Cannot send POST request on /user endpoint. Please use /register",
                     });
                     break;
                 }
-                const { email,firstName, lastName, password } = req.body;
-                const  users = await userService.getAllUsers();
 
-                if(users.some((user) => user.email === email)){
-                    res.status(400).json({message: "Email already exists"});
-                    break;
+                if(req.url === "/register") {
+                    console.log(req.body);
+                    const {email, firstName, lastName, password} = req.body;
+                    const users = await userService.getAllUsers();
+
+                    if (users.some((user) => user.email === email)) {
+                        res.status(400).json({message: "Email already exists"});
+                        break;
+                    }
+
+                    const hashedPassword = await bcrypt.hash(password, 10);
+
+                    const newUser = await userService.createUser({
+                        id: uuidv4(),
+                        email,
+                        firstName,
+                        lastName,
+                        hashedPassword: hashedPassword,
+                        social: createSocial()
+                    });
+                    res.status(201).json(newUser);
+                    return;
+                }else if(req.url === "/verify-user") {
+                    const {id, code} = req.body;
+
+                    const user: User = await userService.getUserById(id);
+
+                    if(!user){
+                        res.status(400).send({message: `User with id ${id} not found`});
+                    }
+
+                    if(user.social && user.social['expiry'] && user.social["otp"]){
+                        const expiryDate = new Date(user.social.expiry);
+                        if(expiryDate < new Date()){
+                            await userService.updateUser(user.id, {social: createSocial()});
+                            res.status(201).json({})
+                        }else{
+                            if(user.social['otp'] === code){
+                                await userService.updateUser(user.id, {verified: true});
+                            }
+                            console.log("yayaya");
+                            res.status(201).json({
+                                message: 'User is verified'
+                            });
+                        }
+                    }
+                    return;
                 }
-
-                const hashedPassword = await bcrypt.hash(password, 10);
-
-                const newUser = await userService.createUser({ id: uuidv4(), email, firstName, lastName, hashedPassword: hashedPassword });
-                res.status(201).json(newUser);
-                break;
 
             }
             case 'PUT': {

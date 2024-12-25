@@ -1,15 +1,16 @@
 import express from "express";
 import {openAIServices} from "./open-ai.services";
 import {contentObjectService} from "../content-object/content-object.service";
-import {contentObjectExtension, imageObjectType} from "../../constants/constants";
+import {contentObjectExtension, excelObjectType, imageObjectType} from "../../constants/constants";
 import axios from "axios";
+import generateExcelFromReceipt from "../helpers/generate-excel-from-receipt";
+import {randomUUID} from "node:crypto";
 
 export default async function handler(req: express.Request, res: express.Response) {
     try{
         switch(req.method){
             case "GET":
                 try{
-
                     const contentObjectId = req.query.id as string;
                     const contentObject = await contentObjectService.getContentObjectById(contentObjectId);
 
@@ -31,10 +32,16 @@ export default async function handler(req: express.Request, res: express.Respons
                     const extractedText = await openAIServices.extractTextFromImage(imageBuffer);
                     const processedText = await openAIServices.getAPIResponse(extractedText);
 
-                    res.status(200).send({extractedText: processedText});
+                    const workbookBuffer = generateExcelFromReceipt(JSON.parse(processedText))
+
+                    //@ts-ignore
+                    res.setHeader('Content-Disposition', `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`);
+                    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                    res.send(workbookBuffer);
                     break;
 
                 }catch(err){
+                    console.error(err);
                     res.status(500).send(err)
                     break;
                 }

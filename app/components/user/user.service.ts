@@ -1,7 +1,8 @@
 import { UserModel } from '../../database/models/user'
+import {Prisma} from "@prisma/client";
 
 export const userService = {
-    createUser: (data: { id: string; email: any; firstName: any; lastName: any; hashedPassword: any }) => {
+    createUser: (data: { id: string; email: any; firstName: any; lastName: any; hashedPassword: any; social: any }) => {
         return UserModel.createUser(data)
     },
 
@@ -17,7 +18,7 @@ export const userService = {
         return UserModel.getAllUsers()
     },
 
-    updateUser: (id: string, data: { email?: string; firstName?: string; lastName?: string }) => {
+    updateUser: (id: string, data: { email?: string; firstName?: string; lastName?: string; verified?: boolean ; social?: any}) => {
         return UserModel.updateUser(id, data)
     },
 
