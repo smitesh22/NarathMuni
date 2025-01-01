@@ -18,7 +18,7 @@ export const userService = {
         return UserModel.getAllUsers()
     },
 
-    updateUser: (id: string, data: { email?: string; firstName?: string; lastName?: string; verified?: boolean ; extensions?: any}) => {
+    updateUser: (id: string, data: { email?: string; firstName?: string; lastName?: string; hashedPassword?: string, verified?: boolean ; extensions?: any; privileged?: boolean}) => {
         return UserModel.updateUser(id, data)
     },
 

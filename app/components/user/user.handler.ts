@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import {v4 as uuidv4} from "uuid";
 import otpGenerator from "otp-generator";
 import {User} from "../../database/models/user";
+import {createExtensions, otpEmailTemplate, transporter} from "../../helpers/user.helpers";
+import {EMAIL} from "../../secrets/secrets";
 
 const handler = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
@@ -34,18 +36,6 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                 break;
             }
             case 'POST': {
-                const createExtensions = () => {
-                    const expiry = new Date();
-                    expiry.setMinutes(expiry.getMinutes() + 1);
-                    return {
-                        otp: otpGenerator.generate(6, {
-                            specialChars: false,
-                            lowerCaseAlphabets: false,
-                            upperCaseAlphabets: false
-                        }),
-                        expiry: expiry.toISOString(),
-                    }
-                }
                 if (req.url === "/user") {
                     res.status(422).json({
                         message: "Cannot send POST request on /user endpoint. Please use /register",
@@ -53,8 +43,7 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     break;
                 }
 
-                if(req.url === "/register") {
-;
+                if (req.url === "/register") {
                     const {email, firstName, lastName, password} = req.body;
                     const users = await userService.getAllUsers();
 
@@ -64,54 +53,27 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                     }
 
                     const hashedPassword = await bcrypt.hash(password, 10);
-
+                    const extensions = createExtensions();
                     const newUser = await userService.createUser({
                         id: uuidv4(),
                         email,
                         firstName,
                         lastName,
                         hashedPassword: hashedPassword,
-                        extensions: createExtensions()
+                        extensions: extensions
                     });
+
+                    const mailOptions = {
+                        from: EMAIL,
+                        to: email,
+                        subject: "Your ZenPay One-Time Password (OTP)",
+                        text: otpEmailTemplate(extensions.otp, firstName),
+                    };
+
+                    await transporter.sendMail(mailOptions);
+
                     res.status(201).json(newUser);
                     return;
-                }else if(req.url === "/verify-user") {
-                    const {email, code} = req.body;
-
-                    const user: User = await userService.getUserByEmail(email);
-                    if(!user){
-                        res.status(400).send({message: `User with email ${email} not found`});
-                    }
-
-                    if(user.extensions && user.extensions['expiry'] && user.extensions["otp"]){
-                        const expiryDate = new Date(user.extensions.expiry);
-                        if(expiryDate < new Date()){
-                            res.status(408).json({
-                                message: `Your token has expired, we send you a new token, please try again.`,
-                            })
-                        }else{
-                            if(user.extensions['otp'] === code){
-                                await userService.updateUser(user.id, {verified: true});
-                                res.status(201).json({
-                                    message: 'User is verified'
-                                });
-                            }else{
-                                res.status(401).send({message: `Unauthorized access token`});
-                            }
-                        }
-                    }
-                    return;
-                }else if(req.url === "/resend-token") {
-                    const {email} = req.body;
-
-                    const user: User = await userService.getUserByEmail(email);
-
-                    if(!user){
-                        res.status(400).send({message: `User with email ${email} not found`});
-                    }
-
-                    await userService.updateUser(user.id, {extensions: createExtensions()});
-                    res.status(201).json({message: "We have send you a new token"});
                 }
                 return;
             }
@@ -122,8 +84,10 @@ const handler = async (req: express.Request, res: express.Response): Promise<voi
                 break;
             }
             case 'DELETE': {
-                const { id } = req.body;
-                await userService.deleteUser(id);
+                const { id } = req.query;
+                if(typeof(id) === "string") {
+                    await userService.deleteUser(id);
+                }
                 res.status(204).end(); // No return here
                 break;
             }

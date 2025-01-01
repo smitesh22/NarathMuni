@@ -9,10 +9,19 @@ export interface User {
     lastName: string;
     hashedPassword: string;
     verified: boolean;
+    privileged: boolean;
     extensions: {
         expiry?: string;
         otp?: string;
+        userTypes: UserType;
     } | null;
+}
+
+export interface UserType{
+    paidUser: boolean;
+    subscriptionType: string;
+    subscriptionStartDate: string;
+    stripeCustomerId: string;
 }
 
 export const UserModel = {
@@ -24,7 +33,7 @@ export const UserModel = {
 
         return {
             ...newUser,
-            extensions: newUser.extensions as User['extensions'], // Cast to match the `User` type
+            extensions: newUser.extensions as User['extensions'],
         };
     },
 

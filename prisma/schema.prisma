@@ -20,6 +20,7 @@ model User {
   lastName  String
   hashedPassword String
   verified Boolean @default(false)
+  privileged Boolean @default(false)
   extensions    Json @default("{}")
 }
 
