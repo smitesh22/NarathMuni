@@ -4,7 +4,6 @@ import {contentObjectService} from "../content-object/content-object.service";
 import {contentObjectExtension, excelObjectType, imageObjectType} from "../../constants/constants";
 import axios from "axios";
 import generateExcelFromReceipt from "../helpers/generate-excel-from-receipt";
-import {randomUUID} from "node:crypto";
 
 export default async function handler(req: express.Request, res: express.Response) {
     try{

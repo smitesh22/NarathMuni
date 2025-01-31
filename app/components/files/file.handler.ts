@@ -30,7 +30,7 @@ export default async function handler(req: express.Request, res: express.Respons
                 [`${contentObjectExtension}/user`]: (req.user as any).id as string,
             };
 
-           await contentObjectService.createContentObject({
+           const createdContentObject = await contentObjectService.createContentObject({
                id: uuidv4(),
                type: imageObjectType,
                extensions: extensions,
@@ -46,6 +46,8 @@ export default async function handler(req: express.Request, res: express.Respons
                     location: (req.file as any).location,
                     refFile: (req.file as any).refFile,
                 },
+                contentObject: createdContentObject
+                ,
                 refFile: req.file,
             });
             return;

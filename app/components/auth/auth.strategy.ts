@@ -14,6 +14,9 @@ passport.use(
                 }
 
                 const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+                if(user.hashedPassword === 'google'){
+                    return done(null, false, {message: "Please sign in with your Google Account"});
+                }
                 if(!isPasswordValid){
                     return done(null, false, {message: "Invalid password"});
                 }
