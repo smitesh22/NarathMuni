@@ -34,7 +34,14 @@ export default async function handler(req: express.Request, res: express.Respons
                     }
                     res.status(200).json([contentObject]);
                     return;
-                }else {
+                }else if(req.user) {
+                    // @ts-ignore
+                    const userId: string = req.user.id;
+                    const contentObjects = await contentObjectService.getContentObjectByUser(userId);
+                    res.status(200).json(contentObjects);
+                    return;
+                } else
+                {
                     const contentObject = await contentObjectService.getContentObjects();
                     res.status(200).json(contentObject);
                     return;

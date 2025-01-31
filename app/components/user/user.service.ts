@@ -25,4 +25,11 @@ export const userService = {
     deleteUser: (id: string) => {
         return UserModel.deleteUser(id)
     },
+    isUserPrivileged: async (id: string) => {
+        const user = await UserModel.getUserById(id);
+        if(!user){
+            return false;
+        }
+        return user.privileged;
+    }
 }

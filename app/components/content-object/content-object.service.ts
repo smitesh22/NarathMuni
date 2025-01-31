@@ -15,6 +15,11 @@ export const contentObjectService = {
         return ContentObjectsModel.getContentObjectById(id);
     },
 
+    getContentObjectByUser: async (userGuid: string): Promise<ContentObject[]|null> => {
+        return ContentObjectsModel.getContentObjectByUserGuid(userGuid);
+
+    },
+
     getContentObjects: async (): Promise<ContentObject[]> => {
         return ContentObjectsModel.getContentObjects();
     },

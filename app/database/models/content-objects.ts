@@ -62,6 +62,22 @@ export const ContentObjectsModel = {
             extensions: contentObject.extensions as ContentObjectExtensions,
         }));
     },
+    getContentObjectByUserGuid: async (userGuid: string): Promise<ContentObject[]> => {
+        const contentObjects = await prisma.contentObject.findMany({
+            where: {
+                extensions: {
+                    path: ['content-object-extension/user'], // Correct JSONB filtering
+                    equals: userGuid
+                }
+            }
+        });
+        if (!contentObjects || contentObjects.length === 0) return [];
+
+        return contentObjects.map(obj => ({
+            ...obj,
+            extensions: obj.extensions as ContentObjectExtensions
+        }));
+    },
 
     deleteContentObjectById: async (id: string): Promise<void> => {
         await prisma.contentObject.deleteMany({
