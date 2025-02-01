@@ -13,12 +13,13 @@ export default async function handler(req: express.Request, res: express.Respons
     try{
     switch (req.method) {
         case "POST":
+            let type = req.query.type as string;
             if(!req.file){
                 res.status(400).send("File is required");
                 return;
-            }else if(!req.file.mimetype.includes("image")){
-                res.status(400).send("File should be an image");
-                return;
+            }
+            if(!type){
+                type = imageObjectType
             }
             const file = req.file as fileWithS3;
             const extensions : ContentObjectExtensions = {
@@ -32,7 +33,7 @@ export default async function handler(req: express.Request, res: express.Respons
 
            const createdContentObject = await contentObjectService.createContentObject({
                id: uuidv4(),
-               type: imageObjectType,
+               type: type,
                extensions: extensions,
                createdOn: new Date(),
                updatedOn: new Date(),

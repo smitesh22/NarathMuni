@@ -13,7 +13,7 @@ export const rateLimiter = rateLimit({
 
 const userRateLimiter = rateLimit({
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
-    limit: 1,
+    limit: 3,
     message: {
         status: 429,
         message: "Too many requests. Please try again later.",
