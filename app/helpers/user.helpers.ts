@@ -1,32 +1,34 @@
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
-import {EMAIL, PASSWORD} from "../secrets/secrets";
+import { EMAIL, PASSWORD } from "../secrets/secrets";
 
 export const createExtensions = () => {
-    const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 5);
-    return {
-        otp: otpGenerator.generate(6, {
-            specialChars: false,
-            lowerCaseAlphabets: false,
-            upperCaseAlphabets: false
-        }),
-        expiry: expiry.toISOString(),
-        userTypes: {
-            paidUser: false,
-            subscriptionType: "",
-            subscriptionStartDate: "",
-            stripeCustomerId: ""
-        }
-    }
-}
+  const expiry = new Date();
+  expiry.setMinutes(expiry.getMinutes() + 5);
+  return {
+    otp: otpGenerator.generate(6, {
+      specialChars: false,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+    }),
+    expiry: expiry.toISOString(),
+    userTypes: {
+      paidUser: false,
+      subscriptionType: null,
+      subscriptionStartDate: null,
+      customerId: null,
+      subscriptionEndDate: null,
+    },
+  };
+};
 
 export const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: EMAIL,
-        pass: PASSWORD
-    }});
+  service: "gmail",
+  auth: {
+    user: EMAIL,
+    pass: PASSWORD,
+  },
+});
 
 export const otpEmailTemplate = (otp: string, firstName: string) => `
 Hello ${firstName},
@@ -45,7 +47,7 @@ Best regards,
 The ZenPay Team
 `;
 module.exports = {
-    createExtensions,
-    transporter,
-    otpEmailTemplate
-}
+  createExtensions,
+  transporter,
+  otpEmailTemplate,
+};

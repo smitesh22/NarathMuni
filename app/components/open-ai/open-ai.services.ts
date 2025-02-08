@@ -3,16 +3,24 @@ import Tesseract from "tesseract.js";
 const openAI = new OpenAI();
 
 export const openAIServices = {
-    extractTextFromImage : async (imageBuffer: Buffer): Promise<string> => {
-        const { data: { text } } = await Tesseract.recognize(imageBuffer, "eng");
-        return text.trim();
-    },
-    getAPIResponse : async (extractedText: string) => {
-        const completion = await openAI.chat.completions.create({
-            model: "gpt-4-turbo",
-            messages: [
-                { role: "system", content: "You are a helpful assistant that extracts structured data from text." },
-                { role: "user", content: `
+  extractTextFromImage: async (imageBuffer: Buffer): Promise<string> => {
+    const {
+      data: { text },
+    } = await Tesseract.recognize(imageBuffer, "eng");
+    return text.trim();
+  },
+  getAPIResponse: async (extractedText: string) => {
+    const completion = await openAI.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful assistant that extracts structured data from text.",
+        },
+        {
+          role: "user",
+          content: `
 You are an assistant that extracts structured data from receipts in a clean and organized format. Given the text of a receipt, convert it into a JSON object with the following structure:
 
 {
@@ -50,10 +58,11 @@ ${extractedText}
 
 ### Output:
 Provide only the JSON structure as described above, without any additional text or commentary.
-` },
-            ],
-        });
+`,
+        },
+      ],
+    });
 
-        return completion.choices[0].message?.content || "";
-    }
-}
+    return completion.choices[0].message?.content || "";
+  },
+};

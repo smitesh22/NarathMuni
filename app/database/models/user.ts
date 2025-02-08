@@ -1,118 +1,121 @@
-import prisma from '../prisma-client';
-import {Prisma} from '@prisma/client';
+import prisma from "../prisma-client";
+import { Prisma } from "@prisma/client";
 
 // Define the User interface
 export interface User {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    hashedPassword: string;
-    verified: boolean;
-    privileged: boolean;
-    extensions: {
-        expiry?: string;
-        otp?: string;
-        userTypes: UserType;
-    } | null;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  hashedPassword: string;
+  verified: boolean;
+  privileged: boolean;
+  extensions: {
+    expiry?: string;
+    otp?: string;
+    userTypes: UserType;
+  } | null;
 }
 
-export interface UserType{
-    paidUser: boolean;
-    subscriptionType: string;
-    subscriptionStartDate: string;
-    stripeCustomerId: string;
+export interface UserType {
+  paidUser?: boolean;
+  subscriptionType?: string;
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  stripeSubscriptionId?: string;
+  customerId?: string;
 }
 
 export const UserModel = {
-    // Create a new user
-    createUser: async (data: Prisma.UserCreateInput): Promise<User> => {
-        const newUser = await prisma.user.create({
-            data,
-        });
+  // Create a new user
+  createUser: async (data: Prisma.UserCreateInput): Promise<User> => {
+    const newUser = await prisma.user.create({
+      data,
+    });
 
-        return {
-            ...newUser,
-            extensions: newUser.extensions as User['extensions'],
-        };
-    },
+    return {
+      ...newUser,
+      extensions: newUser.extensions as User["extensions"],
+    };
+  },
 
+  getUserById: async (id: string): Promise<User> => {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
 
-    getUserById: async (id: string): Promise<User> => {
-        const user = await prisma.user.findUnique({
-            where: { id },
-        });
-        if (!user) {
-            throw new Error(`User with ID ${id} not found`);
-        }
+    return {
+      ...user,
+      extensions: user.extensions as User["extensions"], // Cast to match the `User` type
+    };
+  },
 
-        return {
-            ...user,
-            extensions: user.extensions as User['extensions'], // Cast to match the `User` type
-        };
-    },
+  getUserByEmail: async (email: string): Promise<User> => {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    getUserByEmail: async (email: string): Promise<User> => {
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+    if (!user) {
+      throw new Error(`User with email ${email} not found`);
+    }
 
-        if (!user) {
-            throw new Error(`User with email ${email} not found`);
-        }
+    return {
+      ...user,
+      extensions: user.extensions as User["extensions"], // Cast to match the `User` type
+    };
+  },
 
-        return {
-            ...user,
-            extensions: user.extensions as User['extensions'], // Cast to match the `User` type
-        };
-    },
+  getUserByEmailIfExists: async (email: string): Promise<User | null> => {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    getUserByEmailIfExists: async (email: string): Promise<User|null> => {
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+    if (!user) {
+      return null;
+    }
 
-        if (!user) {
-            return null;
-        }
+    return {
+      ...user,
+      extensions: user.extensions as User["extensions"], // Cast to match the `User` type
+    };
+  },
 
-        return {
-            ...user,
-            extensions: user.extensions as User['extensions'], // Cast to match the `User` type
-        };
-    },
+  // Get all users
+  getAllUsers: async (): Promise<User[]> => {
+    const users = await prisma.user.findMany();
 
-    // Get all users
-    getAllUsers: async (): Promise<User[]> => {
-        const users = await prisma.user.findMany();
+    return users.map((user) => ({
+      ...user,
+      extensions: user.extensions as User["extensions"],
+    }));
+  },
 
-        return users.map((user) => ({
-            ...user,
-            extensions: user.extensions as User['extensions'],
-        }));
-    },
+  updateUser: async (
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> => {
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data,
+    });
 
+    return {
+      ...updatedUser,
+      extensions: updatedUser.extensions as User["extensions"], // Cast to match the `User` type
+    };
+  },
 
-    updateUser: async (id: string, data: Prisma.UserUpdateInput): Promise<User> => {
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data,
-        });
+  deleteUser: async (id: string): Promise<User> => {
+    const deletedUser = await prisma.user.delete({
+      where: { id },
+    });
 
-        return {
-            ...updatedUser,
-            extensions: updatedUser.extensions as User['extensions'], // Cast to match the `User` type
-        };
-    },
-
-    deleteUser: async (id: string): Promise<User> => {
-        const deletedUser = await prisma.user.delete({
-            where: { id },
-        });
-
-        return {
-            ...deletedUser,
-            extensions: deletedUser.extensions as User['extensions'],
-        };
-    },
+    return {
+      ...deletedUser,
+      extensions: deletedUser.extensions as User["extensions"],
+    };
+  },
 };
