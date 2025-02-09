@@ -24,7 +24,7 @@ jobs:
           echo "Installing only production dependencies..."
           npm install --production
           npm prune --production
-
+          npm dedupe
 
       - name: Build and package the app for Lambda
         run: |
@@ -36,8 +36,9 @@ jobs:
         run: |
           echo "Checking the size of app.zip..."
           du -h app.zip  # Show the size in human-readable format
-          unzip -l app.zip  # List the files inside the zip with their sizes
+          echo "folder sizes"
           du -sh * 
+          echo "top node modules"
           du -sh node_modules/* | sort -rh | head -n 10
 
 
