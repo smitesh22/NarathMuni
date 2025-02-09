@@ -29,7 +29,7 @@ jobs:
       - name: Package the app for Lambda
         run: |
           echo "Packaging index.js and app folder into app.zip for AWS Lambda..."
-          zip -r app.zip index.js app \
+          zip -r app.zip index.js app node_modules \
           -x "node_modules/.bin/**" \
           -x "node_modules/typescript/**" \
           -x "node_modules/@prisma/engines/**" \
@@ -38,13 +38,9 @@ jobs:
       - name: Unzip and check contents of app.zip
         run: |
           echo "Unzipping app.zip..."
-          unzip -l app.zip
-          echo "Unzipping completed. Listing contents of extracted files:"
           unzip app.zip -d extracted_app
-          echo "Checking extracted_app directory size:"
-          du -h extracted_app
-          echo "Top-level files and folders:"
-          ls -al extracted_app
+          echo "Unzipping completed. Checking extracted_app directory size:"
+          du -sh extracted_app/*
           echo "Top 10 largest node_modules folders in extracted_app:"
           du -sh extracted_app/node_modules/* | sort -rh | head -n 10
 
