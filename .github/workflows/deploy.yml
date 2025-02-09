@@ -21,22 +21,32 @@ jobs:
 
       - name: Install dependencies
         run: |
-          echo "Installing only production dependencies..."
-          npm install --production
-          npm prune --production
+          echo "Installing all dependencies..."
+          npm install
           npm dedupe
 
-      - name: Package the app for Lambda
+      - name: Compile TypeScript to JavaScript
         run: |
-          echo "Packaging index.js and app folder into app.zip for AWS Lambda..."
+          echo "Compiling TypeScript..."
+          npx tsc --project tsconfig.json
+          echo "Compilation completed."
+
+      - name: Verify compiled JavaScript files
+        run: |
+          echo "Checking for compiled files in ./app..."
+          ls -al ./app
+
+      - name: Package the compiled app for Lambda
+        run: |
+          echo "Packaging index.js, compiled app folder, and node_modules into app.zip..."
           zip -r app.zip index.js app node_modules \
-          -x "*.md" "tests/**" "docs/**"
+          -x "*.ts" "*.md" "tests/**" "docs/**"
 
       - name: Unzip and check contents of app.zip
         run: |
           echo "Unzipping app.zip..."
           unzip app.zip -d extracted_app
-          echo "Unzipping completed. Checking extracted_app directory size:"
+          echo "Checking extracted_app directory size:"
           du -sh extracted_app/*
           echo "Top 10 largest node_modules folders in extracted_app:"
           du -sh extracted_app/node_modules/* | sort -rh | head -n 10
@@ -47,6 +57,7 @@ jobs:
           ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
           if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
             echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB (Max allowed: ${MAX_SIZE} KB)"
+            exit 1
           fi
 
       - name: Install Terraform
