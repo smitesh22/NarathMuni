@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "Building and packaging app.zip for AWS Lambda..."
           zip -r app.zip index.js app/ package.json node_modules/ \
-            -x "*.git*" "*.github*" "*.log" "prisma/**" "terraform/**" "tests/**" "docs/**" 
+            -x "*.git*" "*.github*" "*.log" "prisma/**" "terraform/**" "tests/**" "docs/**"  "app.zip"
 
       - name: Check app.zip size
         run: |
