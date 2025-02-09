@@ -16,4 +16,3 @@ export const EMAIL = process.env.EMAIL as string;
 export const PASSWORD = process.env.PASSWORD as string;
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET as string;
-export const STRIPE_WEBHOOK_SECRET = 'whsec_86db2e92458c48b70d1dd057c9777ceccf1c64a685442c0575e210aedcd6d322';
