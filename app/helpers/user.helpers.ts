@@ -13,7 +13,6 @@ export const createExtensions = () => {
     }),
     expiry: expiry.toISOString(),
     userTypes: {
-      paidUser: false,
       subscriptionType: null,
       subscriptionStartDate: null,
       customerId: null,

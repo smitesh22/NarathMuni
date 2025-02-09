@@ -27,8 +27,10 @@ export const userService = {
   },
   getUserByCustomerId: async (customerId: string) => {
     const users = await UserModel.getAllUsers();
+    console.log(customerId);
+
     const user = users.find(
-      (u) => u.extensions?.userTypes.customerId === customerId,
+        (u) => u.extensions && u.extensions.userTypes?.customerId === customerId
     );
 
     if (!user) {
@@ -38,29 +40,29 @@ export const userService = {
     }
   },
 
-  updateUser: (
-    id: string,
-    data: {
-      email?: string;
-      firstName?: string;
-      lastName?: string;
-      hashedPassword?: string;
-      verified?: boolean;
-      extensions?: any;
-      privileged?: boolean;
-    },
-  ) => {
-    return UserModel.updateUser(id, data);
-  },
-
   deleteUser: (id: string) => {
     return UserModel.deleteUser(id);
   },
+
   isUserPrivileged: async (id: string) => {
     const user = await UserModel.getUserById(id);
     if (!user) {
       return false;
     }
     return user.privileged;
+  },
+  updateUser: (
+      id: string,
+      data: {
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        hashedPassword?: string;
+        verified?: boolean;
+        extensions?: any;
+        privileged?: boolean;
+      },
+  ) => {
+    return UserModel.updateUser(id, data);
   },
 };

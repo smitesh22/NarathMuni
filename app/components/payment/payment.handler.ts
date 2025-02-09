@@ -17,7 +17,6 @@ export default async function (req: express.Request, res: express.Response) {
                 .send({ error: "PriceId and userId are required" });
               return;
             }
-            console.log("Creating payment for user", userId);
 
             const customer = await stripe.customers.create({
               name: userName,
@@ -102,7 +101,6 @@ export default async function (req: express.Request, res: express.Response) {
                 ...userExtensions,
                 userTypes: {
                   ...user.extensions?.userTypes,
-                  paidUser: true,
                   subscriptionType: subscriptionType,
                   subscriptionStartDate: new Date().toISOString(),
                   subscriptionEndDate: null,
@@ -119,42 +117,43 @@ export default async function (req: express.Request, res: express.Response) {
         return;
       case "DELETE":
         try {
-          const { userId, subscriptionId } =
-            (req.query as { userId?: string; subscriptionId?: string }) || {};
-          console.log(userId);
-          console.log(subscriptionId);
-          if (!userId || !subscriptionId) {
+          const { userId } =
+            (req.query as { userId?: string }) || {};
+
+          if (!userId) {
             res
               .status(400)
-              .send({ error: "userId and subscriptionId are required" });
+              .send({ error: "userId is required" });
             return;
           }
 
           const user = await userService.getUserById(userId);
-
+          const subscriptionId = user.extensions?.userTypes.stripeSubscriptionId;
           if (!user) {
             res.status(404).send({ error: `User with id ${userId} not found` });
             return;
           }
 
-          await stripe.subscriptions.cancel(subscriptionId);
-
-          await userService.updateUser(userId, {
-            privileged: false,
+          if (!subscriptionId) {
+            res.status(404).send({ error: `User with id ${userId} is not subscribed` });
+            return;
+          }
+          const subscription = await stripe.subscriptions.update(subscriptionId, {
+            cancel_at_period_end: true,
+          });
+          const subscriptionEndDate = new Date(subscription.current_period_end * 1000).toISOString();
+          await userService.updateUser(user.id, {
             extensions: {
               ...user.extensions,
               userTypes: {
-                paidUser: false,
-                subscriptionType: null,
-                customerId: null,
-                subscriptionStartDate: null,
+                ...user.extensions?.userTypes,
+                subscriptionEndDate: subscriptionEndDate,
               },
             },
           });
-
           res
             .status(200)
-            .send({ message: "Subscription cancelled successfully!" });
+            .send({ message: "Subscription cancelled successfully!", date: subscriptionEndDate });
         } catch (error) {
           console.error(error);
           res.status(500).send({ error: "Failed to cancel subscription" });

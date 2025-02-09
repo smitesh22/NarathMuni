@@ -18,7 +18,6 @@ export interface User {
 }
 
 export interface UserType {
-  paidUser?: boolean;
   subscriptionType?: string;
   subscriptionStartDate?: string;
   subscriptionEndDate?: string;
@@ -27,7 +26,6 @@ export interface UserType {
 }
 
 export const UserModel = {
-  // Create a new user
   createUser: async (data: Prisma.UserCreateInput): Promise<User> => {
     const newUser = await prisma.user.create({
       data,
@@ -84,18 +82,9 @@ export const UserModel = {
   },
 
   // Get all users
-  getAllUsers: async (): Promise<User[]> => {
-    const users = await prisma.user.findMany();
-
-    return users.map((user) => ({
-      ...user,
-      extensions: user.extensions as User["extensions"],
-    }));
-  },
-
   updateUser: async (
-    id: string,
-    data: Prisma.UserUpdateInput,
+      id: string,
+      data: Prisma.UserUpdateInput,
   ): Promise<User> => {
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -106,6 +95,15 @@ export const UserModel = {
       ...updatedUser,
       extensions: updatedUser.extensions as User["extensions"], // Cast to match the `User` type
     };
+  },
+
+  getAllUsers: async (): Promise<User[]> => {
+    const users = await prisma.user.findMany();
+
+    return users.map((user) => ({
+      ...user,
+      extensions: user.extensions as User["extensions"],
+    }));
   },
 
   deleteUser: async (id: string): Promise<User> => {

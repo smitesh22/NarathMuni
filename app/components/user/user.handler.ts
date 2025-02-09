@@ -88,11 +88,12 @@ const handler = async (
         return;
       }
       case "PUT": {
-        const { id, email, firstName, lastName } = req.body;
+        const { id, email, firstName, lastName, privileged } = req.body;
         const updatedUser = await userService.updateUser(id, {
           email,
           firstName,
           lastName,
+          privileged
         });
         res.status(200).json(updatedUser); // No return here
         break;

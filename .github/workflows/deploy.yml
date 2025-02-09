@@ -26,6 +26,21 @@ jobs:
         run: |
           zip -r app.zip . -x "*.git*" "*.github*" "*.terraform*" "terraform" # Exclude unnecessary files, but include node_modules
 
+      - name: Check app.zip size
+        run: |
+          echo "Checking the size of app.zip..."
+          du -h app.zip  # Show the size in human-readable format
+          unzip -l app.zip  # List the files inside the zip with their sizes
+
+      - name: Fail if app.zip is too large
+        run: |
+          MAX_SIZE=50000 # 50 MB in KB
+          ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
+          if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB (Max allowed: ${MAX_SIZE} KB)"
+            exit 1
+          fi
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
         with:
