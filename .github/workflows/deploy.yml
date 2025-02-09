@@ -26,27 +26,21 @@ jobs:
           npm prune --production
           npm dedupe
 
-      - name: Build the app with esbuild
-        run: |
-          echo "Building the app for AWS Lambda..."
-          npm run build
-
       - name: Package the app for Lambda
         run: |
-          echo "Packaging dist/ folder into app.zip for AWS Lambda..."
-          cd dist
-          zip -r ../app.zip . \
+          echo "Packaging index.js and app folder into app.zip for AWS Lambda..."
+          zip -r app.zip index.js app \
           -x "node_modules/.bin/**" \
           -x "node_modules/typescript/**" \
           -x "node_modules/@prisma/engines/**" \
-          -x "*.ts" "*.md" "tests/**" "docs/**"
+          -x "*.md" "tests/**" "docs/**"
 
       - name: Check app.zip size
         run: |
           echo "Checking the size of app.zip..."
           du -h app.zip  # Show the size in human-readable format
           echo "Top-level folder sizes:"
-          du -sh * 
+          du -sh *
           echo "Top 10 largest node_modules folders:"
           du -sh node_modules/* | sort -rh | head -n 10
 
@@ -85,4 +79,4 @@ jobs:
 
       - name: Apply Terraform
         run: terraform apply -auto-approve
-        working-directory: ./terraform
+        wor
