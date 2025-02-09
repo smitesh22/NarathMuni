@@ -7,11 +7,11 @@ on:
 
 jobs:
   terraform:
-    name: Build and Deploy with Terraform
+    name: Deploy with Terraform
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout the code
         uses: actions/checkout@v2
 
       - name: Set up Node.js
@@ -21,34 +21,31 @@ jobs:
 
       - name: Install dependencies
         run: |
-          echo "Installing dependencies..."
-          npm install
+          echo "Installing only production dependencies..."
+          npm install --production
+          npm prune --production
+          npm dedupe
 
-      - name: Build and bundle with esbuild
+      - name: Build and package the app for Lambda
         run: |
-          echo "Building the app using esbuild..."
-          node build.js
-
-      - name: Package the app for AWS Lambda
-        run: |
-          echo "Packaging app.zip for AWS Lambda..."
-          cd dist
-          cp -r ../node_modules .
-          zip -r ../app.zip ./*
+          echo "Building and packaging app.zip for AWS Lambda..."
+          zip -r app.zip index.js app/ package.json node_modules/ \
+            -x "*.git*" "*.github*" "*.log" "prisma/**" "terraform/**" "tests/**" "docs/**"  "app.zip"
 
       - name: Check app.zip size
         run: |
           echo "Checking the size of app.zip..."
-          du -h ../app.zip  # Show the size in human-readable format
+          du -h app.zip  # Show the size in human-readable format
           echo "folder sizes"
-          du -sh *
+          du -sh * 
           echo "top node modules"
-          du -sh ../node_modules/* | sort -rh | head -n 10
+          du -sh node_modules/* | sort -rh | head -n 10
+
 
       - name: Fail if app.zip is too large
         run: |
           MAX_SIZE=50000 # 50 MB in KB
-          ACTUAL_SIZE=$(du -k "../app.zip" | cut -f1)
+          ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
           if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
             echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB (Max allowed: ${MAX_SIZE} KB)"
             exit 1
@@ -66,7 +63,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Initialize Terraform
+      - name: Initialize Terraform with S3 backend
         run: terraform init
         working-directory: ./terraform
 

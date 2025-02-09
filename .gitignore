@@ -1,10 +1,18 @@
-node_modules/*
-.aws
-.terraform
-.terraform.lock.hcl
+# Node dependencies
+node_modules/
+package-lock.json
+
+# AWS and Terraform
+.aws/
+.terraform/
 terraform.tfstate
 terraform.tfstate.backup
+.terraform.lock.hcl
+
+# Build artifacts
+dist/
 app.zip
-.idea/
+
+# Environment variables and IDE configs
 .env
-package-lock.json
+.idea/
