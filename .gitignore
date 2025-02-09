@@ -4,7 +4,6 @@ package-lock.json
 
 # AWS and Terraform
 .aws/
-.terraform/
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
