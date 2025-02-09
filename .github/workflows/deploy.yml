@@ -39,7 +39,6 @@ jobs:
           -x "node_modules/.bin/**" \
           -x "node_modules/typescript/**" \
           -x "node_modules/@prisma/engines/**" \
-          -x "node_modules/tesseract.js/**" \
           -x "*.ts" "*.md" "tests/**" "docs/**"
 
       - name: Check app.zip size
