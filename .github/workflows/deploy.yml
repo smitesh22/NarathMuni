@@ -35,14 +35,18 @@ jobs:
           -x "node_modules/@prisma/engines/**" \
           -x "*.md" "tests/**" "docs/**"
 
-      - name: Check app.zip size
+      - name: Unzip and check contents of app.zip
         run: |
-          echo "Checking the size of app.zip..."
-          du -h app.zip  # Show the size in human-readable format
-          echo "Top-level folder sizes:"
-          du -sh *
-          echo "Top 10 largest node_modules folders:"
-          du -sh node_modules/* | sort -rh | head -n 10
+          echo "Unzipping app.zip..."
+          unzip -l app.zip
+          echo "Unzipping completed. Listing contents of extracted files:"
+          unzip app.zip -d extracted_app
+          echo "Checking extracted_app directory size:"
+          du -h extracted_app
+          echo "Top-level files and folders:"
+          ls -al extracted_app
+          echo "Top 10 largest node_modules folders in extracted_app:"
+          du -sh extracted_app/node_modules/* | sort -rh | head -n 10
 
       - name: Fail if app.zip is too large
         run: |
@@ -79,4 +83,4 @@ jobs:
 
       - name: Apply Terraform
         run: terraform apply -auto-approve
-
+        working-directory: ./terraform
