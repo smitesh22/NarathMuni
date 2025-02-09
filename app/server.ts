@@ -17,8 +17,8 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(passport.initialize());
 app.use("/", routes);
-app.get("/", (req: express.Request, res: express.Response) => {
-  res.status(200).json(`Hello fom ${ENV} environment`);
+app.get("/", (req: express.Request, res: express.Response, next: express.NextFunction,) => {
+  res.status(200).send(`Hello fom ${ENV} environment`);
 });
 
 export { stripe };

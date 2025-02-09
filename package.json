@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "nodemon run-local-index.ts",
     "dev": "nodemon run-local-index.ts",
     "format": "prettier --write \"**/*.js\" && prettier --write \"**/*.ts\"",
     "build": "esbuild index.js --bundle --platform=node --target=node20 --outdir=dist"
