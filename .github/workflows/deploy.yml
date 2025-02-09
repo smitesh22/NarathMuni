@@ -35,7 +35,12 @@ jobs:
         run: |
           echo "Packaging dist/ folder into app.zip for AWS Lambda..."
           cd dist
-          zip -r ../app.zip . -x "*.git*" "*.github*" "*.log" "*.ts" "*.md" "tests/**" "docs/**"
+          zip -r ../app.zip . \
+          -x "node_modules/.bin/**" \
+          -x "node_modules/typescript/**" \
+          -x "node_modules/@prisma/engines/**" \
+          -x "node_modules/tesseract.js/**" \
+          -x "*.ts" "*.md" "tests/**" "docs/**"
 
       - name: Check app.zip size
         run: |
