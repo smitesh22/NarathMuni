@@ -20,13 +20,15 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install --production  # Install only production dependencies
+        run: |
+          echo "Installing only production dependencies..."
+          npm install --production
 
       - name: Build and package the app for Lambda
         run: |
-          npm install --production
-          zip -r app.zip index.js node_modules/ package.json \
-            -x "*.git*" "*.github*" "*.log" "prisma/**" "tests/**" "docs/**"  
+          echo "Building and packaging app.zip for AWS Lambda..."
+          zip -r app.zip index.js app/ package.json node_modules/ \
+            -x "*.git*" "*.github*" "*.log" "prisma/**" "terraform/**" "tests/**" "docs/**" 
 
       - name: Check app.zip size
         run: |
