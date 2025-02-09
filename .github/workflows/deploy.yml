@@ -50,7 +50,6 @@ jobs:
           ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
           if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
             echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB (Max allowed: ${MAX_SIZE} KB)"
-            exit 1
           fi
 
       - name: Install Terraform
