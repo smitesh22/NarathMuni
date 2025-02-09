@@ -30,9 +30,6 @@ jobs:
         run: |
           echo "Packaging index.js and app folder into app.zip for AWS Lambda..."
           zip -r app.zip index.js app node_modules \
-          -x "node_modules/.bin/**" \
-          -x "node_modules/typescript/**" \
-          -x "node_modules/@prisma/engines/**" \
           -x "*.md" "tests/**" "docs/**"
 
       - name: Unzip and check contents of app.zip
