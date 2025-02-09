@@ -17,8 +17,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
-  #profile = "smitesh"
+  region = var.region
 }
 
 variable "region" {
@@ -79,10 +78,10 @@ data "aws_s3_bucket" "existing_bucket" {
 }
 
 resource "aws_s3_object" "app_zip" {
-  bucket = "narath-muni-v3"
+  bucket = data.aws_s3_bucket.existing_bucket.bucket
   key    = "app.zip"
   source = "../app.zip"
-  etag   = filemd5("../app.zip") 
+  etag   = filemd5("../app.zip")
 }
 
 resource "aws_lambda_function" "my_lambda_function" {
@@ -90,9 +89,9 @@ resource "aws_lambda_function" "my_lambda_function" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
   runtime          = "nodejs20.x"
-  s3_bucket        = "narath-muni-v3"
-  s3_key           = "app.zip"
-  source_code_hash = filebase64sha256("../app.zip")
+  s3_bucket        = data.aws_s3_bucket.existing_bucket.bucket
+  s3_key           = aws_s3_object.app_zip.key
+  source_code_hash = aws_s3_object.app_zip.etag
 
   environment {
     variables = {
@@ -141,7 +140,6 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name   = "prod"
 }
 
-# Add the DynamoDB table for Terraform state locking
 resource "aws_dynamodb_table" "terraform_state_lock" {
   name         = "terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
