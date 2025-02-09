@@ -8,6 +8,7 @@ package-lock.json
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
+.tfvars
 
 # Build artifacts
 dist/

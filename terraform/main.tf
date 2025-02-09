@@ -95,7 +95,14 @@ resource "aws_lambda_function" "my_lambda_function" {
 
   environment {
     variables = {
-      ENV = "PROD"
+      ENV                 = var.ENV
+      JWT_SECRET          = var.JWT_SECRET
+      S3_BUCKET_NAME      = var.S3_BUCKET_NAME
+      DATABASE_URL        = var.DATABASE_URL
+      OPENAI_API_KEY      = var.OPENAI_API_KEY
+      STRIPE_KEY          = var.STRIPE_KEY
+      GOOGLE_CLIENT_SECRET = var.GOOGLE_CLIENT_SECRET
+      GOOGLE_CLIENT_ID    = var.GOOGLE_CLIENT_ID
     }
   }
 }
