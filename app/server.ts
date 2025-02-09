@@ -17,7 +17,7 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(passport.initialize());
 app.use("/", routes);
-app.get("/", (req: express.Request, res: express.Response, next: express.NextFunction,) => {
+app.get("/", async (req: express.Request, res: express.Response, next: express.NextFunction,) => {
   res.status(200).send(`Hello fom ${ENV} environment`);
 });
 
