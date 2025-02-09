@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and package the app
         run: |
-          zip -r app.zip . -x "*.git*" "*.github*" "*.terraform*" "terraform" # Exclude unnecessary files, but include node_modules
+          zip -r app.zip . -x "prisma/**" "*.git*" "*.github*" "*.terraform*" "terraform" # Exclude unnecessary files, but include node_modules
 
       - name: Check app.zip size
         run: |
