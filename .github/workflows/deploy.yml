@@ -26,21 +26,25 @@ jobs:
           npm prune --production
           npm dedupe
 
-      - name: Build and package the app for Lambda
+      - name: Build the app with esbuild
         run: |
-          echo "Building and packaging app.zip for AWS Lambda..."
-          zip -r app.zip index.js app/ package.json node_modules/ \
-            -x "*.git*" "*.github*" "*.log" "prisma/**" "terraform/**" "tests/**" "docs/**"  "app.zip"
+          echo "Building the app for AWS Lambda..."
+          npm run build
+
+      - name: Package the app for Lambda
+        run: |
+          echo "Packaging dist/ folder into app.zip for AWS Lambda..."
+          cd dist
+          zip -r ../app.zip . -x "*.git*" "*.github*" "*.log" "*.ts" "*.md" "tests/**" "docs/**"
 
       - name: Check app.zip size
         run: |
           echo "Checking the size of app.zip..."
           du -h app.zip  # Show the size in human-readable format
-          echo "folder sizes"
+          echo "Top-level folder sizes:"
           du -sh * 
-          echo "top node modules"
+          echo "Top 10 largest node_modules folders:"
           du -sh node_modules/* | sort -rh | head -n 10
-
 
       - name: Fail if app.zip is too large
         run: |
