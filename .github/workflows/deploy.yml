@@ -25,6 +25,10 @@ jobs:
           npm install
           npm dedupe
 
+      - name: Generate Prisma Client for AWS Lambda
+  run: |
+    npx prisma generate --binary-targets native rhel-openssl-3.0.x
+
       - name: Compile TypeScript to JavaScript
         run: |
           echo "Compiling TypeScript..."
