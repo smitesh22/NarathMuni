@@ -2,7 +2,7 @@ import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
 import { EMAIL, PASSWORD } from "../secrets/secrets";
 
-export const createExtensions = () => {
+const createExtensions = () => {
   const expiry = new Date();
   expiry.setMinutes(expiry.getMinutes() + 5);
   return {
@@ -21,7 +21,7 @@ export const createExtensions = () => {
   };
 };
 
-export const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: EMAIL,
@@ -29,7 +29,7 @@ export const transporter = nodemailer.createTransport({
   },
 });
 
-export const otpEmailTemplate = (otp: string, firstName: string) => `
+const otpEmailTemplate = (otp: string, firstName: string) => `
 Hello ${firstName},
 
 ${otp} is your one-time password (OTP) for the ZenPay app.
@@ -45,8 +45,6 @@ Enjoy using ZenPay!
 Best regards,  
 The ZenPay Team
 `;
-module.exports = {
-  createExtensions,
-  transporter,
-  otpEmailTemplate,
-};
+
+export { createExtensions, transporter, otpEmailTemplate };
+
