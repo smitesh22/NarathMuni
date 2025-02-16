@@ -87,7 +87,7 @@ resource "aws_s3_object" "app_zip" {
 resource "aws_lambda_function" "my_lambda_function" {
   function_name    = "narath_muni"
   role             = aws_iam_role.lambda_role.arn
-  handler          = "index.handler"
+  handler          = "dist/index.handler"
   runtime          = "nodejs20.x"
   s3_bucket        = data.aws_s3_bucket.existing_bucket.bucket
   s3_key           = aws_s3_object.app_zip.key
