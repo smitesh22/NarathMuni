@@ -20,7 +20,7 @@ export default async function handler(
           const contentObjectId = req.query.id as string;
           const contentObject =
             await contentObjectService.getContentObjectById(contentObjectId);
-
+          console.log(contentObject);
           if (!contentObject) {
             res.status(404).send({ message: "Content Object Not Found" });
             break;
@@ -38,12 +38,13 @@ export default async function handler(
               responseType: "arraybuffer",
             });
             const imageBuffer = Buffer.from(imageResponse.data);
-
+            console.log("extracting from tesseacrt");
             const extractedText =
               await openAIServices.extractTextFromImage(imageBuffer);
+            console.log('extracted from tessearcr');
             const processedText =
               await openAIServices.getAPIResponse(extractedText);
-
+            console.log("open ai done");
             const workbookBuffer = generateExcelFromReceipt(
               JSON.parse(processedText),
             );
