@@ -59,6 +59,7 @@ const handler = async (
               res.status(400).json({ message: "All fields are required" });
               return;
             }
+            console.log(req.body);
 
             const users = await userService.getAllUsers();
 
@@ -69,6 +70,7 @@ const handler = async (
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
+            console.log(extensions);
             const newUser = await userService.createUser({
               id: uuidv4(),
               email,
@@ -84,7 +86,7 @@ const handler = async (
               subject: "Your ZenPay One-Time Password (OTP)",
               text: otpEmailTemplate(extensions.otp, firstName),
             };
-
+            console.log(mailOptions);
             await transporter.sendMail(mailOptions);
 
             res.status(201).json(newUser);
