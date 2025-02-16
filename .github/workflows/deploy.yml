@@ -28,7 +28,7 @@ jobs:
       - name: Prune devDependencies
         run: |
           echo "Removing devDependencies to reduce deployment size..."
-          npm prune --production
+          npm ci --only=production
           echo "Pruning completed."
 
       - name: Bundle with esbuild (Tree-Shaking & Minification)
