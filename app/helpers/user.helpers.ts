@@ -39,7 +39,7 @@ const otpEmailTemplate = (otp: string, firstName: string) => `
     <p>Hello ${firstName},</p>
     <p>${otp} is your one-time password (OTP) for the LedgeFast app.</p>
     <p>Please use this code to complete your action. If it doesn't work, you can manually enter the code when prompted in the app.</p>
-    <p>The code was requested from the ZenPay website. It will expire in 5 minutes.</p>
+    <p>The code was requested from the Ledgefast website. It will expire in 5 minutes.</p>
     <p>If you did not request this code, please disregard this email or contact LedgeFast support immediately for assistance.</p>
     <p>Enjoy using LedgeFast!</p>
     <p>Best regards,<br>The LedgeFast Team</p>

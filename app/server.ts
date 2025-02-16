@@ -16,15 +16,21 @@ app.use((req, res, next) => {
 });
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
-    if (origin && /https:\/\/.*\.ledgefast\.com/.test(origin)) {
+    const allowedOrigins = [
+      /^https:\/\/.*\.ledgefast\.com$/,
+      /^https:\/\/ledgefast\.com$/,
+      /^http:\/\/localhost(:\d+)?$/
+    ];
+    if (!origin || allowedOrigins.some((regex) => regex.test(origin))) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
   methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization"
-}
+  allowedHeaders: "Content-Type,Authorization",
+  credentials: true,  // Add this if you need cookies or authorization headers
+};
 
 app.use(cors(corsOptions));
 app.set('trust proxy', 1);
