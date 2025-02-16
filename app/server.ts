@@ -14,7 +14,11 @@ app.use((req, res, next) => {
     express.json()(req, res, next);
   }
 });
-app.use(cors());
+app.use(cors({
+  origin: "https://dev.ledgefast.com",
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization"
+}));
 app.set('trust proxy', 1);
 app.use(passport.initialize());
 app.use("/", routes);
