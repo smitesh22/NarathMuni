@@ -10,6 +10,7 @@ import {
   transporter,
 } from "../../helpers/user.helpers";
 import { EMAIL } from "../../secrets/secrets";
+import {fileService} from "../files/file.service";
 
 const handler = async (
     req: express.Request,
@@ -68,6 +69,9 @@ const handler = async (
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
+            console.log(email);
+            console.log(firstName);
+            console.log(lastName);
             const newUser = await userService.createUser({
               id: uuidv4(),
               email,
