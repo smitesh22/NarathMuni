@@ -60,7 +60,7 @@ router.get(
       const redirectUrl =
           env === "LOCAL"
               ? "http://localhost:5173/dashboard"
-              : "https://www.ledgefast.com/dashboard";
+              : "https://dev.ledgefast.com/dashboard";
       console.log(redirectUrl);
       res.send(`
           <script>
