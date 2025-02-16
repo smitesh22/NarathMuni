@@ -62,10 +62,13 @@ const handler = async (
             }
             const user = await userService.getUserByEmail(email);
 
-            if (user) {
+            if (user && user.verified) {
               res.status(400).json({ message: "Email already exists" });
               return;
+            }else if (user){
+              await userService.deleteUser(user.id);
             }
+
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
             const newUser = await userService.createUser({

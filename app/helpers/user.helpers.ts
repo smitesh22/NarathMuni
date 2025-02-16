@@ -34,7 +34,7 @@ const transporter = nodemailer.createTransport({
 const otpEmailTemplate = (otp: string, firstName: string) => `
   <div style="font-family: Arial, sans-serif; line-height: 1.6;">
     <div style="text-align: center; margin-bottom: 20px;">
-      <img src="https://dev.ledgefast.com/logo.svg" alt="LedgeFast Logo" style="max-width: 150px; height: auto;">
+      <img src="https://dev.ledgefast.com/logo.png" alt="LedgeFast Logo" style="max-width: 150px; height: auto;">
     </div>
     <p>Hello ${firstName},</p>
     <p>${otp} is your one-time password (OTP) for the LedgeFast app.</p>
