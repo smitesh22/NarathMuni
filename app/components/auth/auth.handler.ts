@@ -19,11 +19,12 @@ const handler = async (
         if (req.url === "/verify-token") {
           const { email, code } = req.body;
 
-          const user: User = await userService.getUserByEmail(email);
+          const user: User|null = await userService.getUserByEmail(email);
           if (!user) {
             res
               .status(400)
               .send({ message: `User with email ${email} not found` });
+            return;
           }
 
           if (
@@ -63,12 +64,13 @@ const handler = async (
         } else if (req.url === "/resend-token") {
           const { email } = req.body;
 
-          const user: User = await userService.getUserByEmail(email);
+          const user: User|null = await userService.getUserByEmail(email);
 
           if (!user) {
             res
               .status(400)
               .send({ message: `User with email ${email} not found` });
+            return;
           }
           const extensions = createExtensions();
           await userService.updateUser(user.id, { extensions: extensions });
@@ -86,12 +88,13 @@ const handler = async (
         } else if (req.url === "/reset-password") {
           const { newPassword, email } = req.body;
 
-          const user: User = await userService.getUserByEmail(email);
+          const user: User|null = await userService.getUserByEmail(email);
 
           if (!user) {
             res
               .status(400)
               .send({ message: `User with email ${email} not found` });
+            return;
           }
 
           const hashedPassword = await bcrypt.hash(newPassword, 10);
