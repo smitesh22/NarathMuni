@@ -25,6 +25,12 @@ jobs:
           npm install
           npm dedupe
 
+      - name: Prune devDependencies
+        run: |
+          echo "Removing devDependencies to reduce deployment size..."
+          npm prune --production
+          echo "Pruning completed."
+
       - name: Bundle with esbuild (Tree-Shaking & Minification)
         run: |
           echo "Bundling with esbuild..."
@@ -41,7 +47,7 @@ jobs:
           echo "Packaging index.js and node_modules into app.zip..."
           zip -r app.zip dist/ node_modules \
           -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
-          echo "Packaging completed."
+          echo "Packaging completed."fv
 
       - name: Verify the size and contents of app.zip
         run: |
