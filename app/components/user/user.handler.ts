@@ -80,7 +80,7 @@ const handler = async (
             const mailOptions = {
               from: EMAIL,
               to: email,
-              subject: "Your ZenPay One-Time Password (OTP)",
+              subject: "Your LedgeFast One-Time Password (OTP)",
               text: otpEmailTemplate(extensions.otp, firstName),
             };
             console.log(mailOptions);

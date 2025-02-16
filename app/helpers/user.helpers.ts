@@ -32,20 +32,18 @@ const transporter = nodemailer.createTransport({
 });
 
 const otpEmailTemplate = (otp: string, firstName: string) => `
-Hello ${firstName},
-
-${otp} is your one-time password (OTP) for the ZenPay app.
-
-Please use this code to complete your action. If it doesn't work, you can manually enter the code when prompted in the app.
-
-The code was requested from the ZenPay website. It will expire in 5 minutes.
-
-If you did not request this code, please disregard this email or contact ZenPay support immediately for assistance.
-
-Enjoy using ZenPay!
-
-Best regards,  
-The ZenPay Team
+  <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="https://dev.ledgefast.com/logo.svg" alt="LedgeFast Logo" style="max-width: 150px; height: auto;">
+    </div>
+    <p>Hello ${firstName},</p>
+    <p>${otp} is your one-time password (OTP) for the LedgeFast app.</p>
+    <p>Please use this code to complete your action. If it doesn't work, you can manually enter the code when prompted in the app.</p>
+    <p>The code was requested from the ZenPay website. It will expire in 5 minutes.</p>
+    <p>If you did not request this code, please disregard this email or contact LedgeFast support immediately for assistance.</p>
+    <p>Enjoy using LedgeFast!</p>
+    <p>Best regards,<br>The LedgeFast Team</p>
+  </div>
 `;
 
 export { createExtensions, transporter, otpEmailTemplate };
