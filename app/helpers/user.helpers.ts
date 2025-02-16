@@ -22,7 +22,9 @@ const createExtensions = () => {
 };
 
 const transporter = nodemailer.createTransport({
-  service: EMAIL_HOST,
+  host: EMAIL_HOST,
+  port: 465,
+  secure: true,
   auth: {
     user: EMAIL,
     pass: PASSWORD,
