@@ -28,9 +28,8 @@ jobs:
       - name: Remove Unnecessary Prisma Binaries
         run: |
           echo "Cleaning up Prisma engines..."
-          rm -rf node_modules/@prisma/engines/introspection-engine*
-          rm -rf node_modules/@prisma/engines/migration-engine*
-          rm -rf node_modules/@prisma/engines/libquery_engine*
+          rm -rf node_modules/@prisma/engines/
+          rm -rf node_modules/@prisma/client/libquery_engine*
           rm -rf node_modules/prisma
           echo "Prisma cleanup completed."
 
