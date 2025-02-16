@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipelinename: CI/CD Pipeline
 
 on:
   push:
@@ -19,55 +19,52 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: |
-          echo "Installing all dependencies..."
-          npm install --omit=dev
+      - name: Install all dependencies
+        run: npm ci # Ensures clean install with both dependencies & devDependencies
 
       - name: Generate Prisma Client
-        run: |
-          npx prisma generate
+        run: npx prisma generate
 
-      - name: Uninstall Prisma and Typescript
-        run: |
-          echo "Removing devDependencies to reduce deployment size..."
-          npm uninstall prisma typescript
-          echo "Completed."
+      - name: Install only production dependencies
+        run: npm ci --omit=dev # Removes all devDependencies
 
-      - name: Bundle with esbuild (Tree-Shaking & Minification)
+      - name: Remove Unnecessary Prisma Binaries
         run: |
-          echo "Bundling with esbuild..."
-          npx esbuild index.js --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk
-          echo "Bundling completed."
+          echo "Cleaning up Prisma engines..."
+          rm -rf node_modules/@prisma/engines/introspection-engine*
+          rm -rf node_modules/@prisma/engines/migration-engine*
+          rm -rf node_modules/@prisma/engines/libquery_engine*
+          rm -rf node_modules/prisma
+          echo "Prisma cleanup completed."
 
-      - name: Verify bundled files
+      - name: Force Remove TypeScript & Prisma
         run: |
-          echo "Checking bundled files in ./dist..."
-          ls -al ./dist
+          echo "Removing TypeScript & Prisma..."
+          rm -rf node_modules/prisma
+          rm -rf node_modules/typescript
+          rm -rf node_modules/ts-node
+          echo "Cleanup complete."
 
-      - name: Package the bundled app for Lambda
+      - name: Reduce Tesseract.js Size
         run: |
-          echo "Packaging index.js and node_modules into app.zip..."
+          echo "Cleaning up Tesseract.js data files..."
+          rm -rf node_modules/tesseract.js-core/data/* --exclude eng.traineddata
+          echo "Tesseract.js cleanup completed."
+
+      - name: Bundle with esbuild
+        run: npx esbuild index.js --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk
+
+      - name: Package for Lambda
+        run: |
           zip -r app.zip dist/ node_modules \
           -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
-          echo "Packaging completed."fv
 
-      - name: Extract and Analyze node_modules
+      - name: Verify app.zip size
         run: |
-          echo "Extracting app.zip..."
-          mkdir extracted
-          unzip -q app.zip -d extracted
-          echo "Checking extracted node_modules size and top 20 largest directories:"
-          du -sh extracted/node_modules/* | sort -rh | head -n 20
-          echo "Checking base folder sizes:"
-          du -sh extracted/* | sort -rh
-
-      - name: Fail if app.zip is too large
-        run: |
-          MAX_SIZE=50000 # 50 MB in KB
+          MAX_SIZE=50000 # 50 MB limit
           ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
           if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
-            echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB (Max allowed: ${MAX_SIZE} KB)"
+            echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB"
             exit 1
           fi
 
