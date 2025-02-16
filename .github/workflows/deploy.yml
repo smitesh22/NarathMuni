@@ -20,13 +20,10 @@ jobs:
           node-version: '20'
 
       - name: Install all dependencies
-        run: npm ci # Ensures clean install with both dependencies & devDependencies
+        run:  npm install --omit=dev # Ensures clean install with both dependencies & devDependencies
 
       - name: Generate Prisma Client
         run: npx prisma generate
-
-      - name: Install only production dependencies
-        run: npm ci --omit=dev # Removes all devDependencies
 
       - name: Remove Unnecessary Prisma Binaries
         run: |
@@ -45,14 +42,13 @@ jobs:
           rm -rf node_modules/ts-node
           echo "Cleanup complete."
 
-      - name: Reduce Tesseract.js Size
-        run: |
-          echo "Cleaning up Tesseract.js data files..."
-          rm -rf node_modules/tesseract.js-core/data/* --exclude eng.traineddata
-          echo "Tesseract.js cleanup completed."
-
       - name: Bundle with esbuild
         run: npx esbuild index.js --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk
+
+      - name: Analyze node_modules size
+        run: |
+          echo "Top 20 largest node_modules directories:"
+          du -sh node_modules/* | sort -rh | head -n 20
 
       - name: Package for Lambda
         run: |
