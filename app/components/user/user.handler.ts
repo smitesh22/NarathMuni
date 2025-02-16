@@ -59,7 +59,7 @@ const handler = async (
               res.status(400).json({ message: "All fields are required" });
               return;
             }
-
+            console.log("yaya");
             const users = await userService.getAllUsers();
             console.log(users);
             if (users.some((user) => user.email === email)) {
