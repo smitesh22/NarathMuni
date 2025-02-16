@@ -20,7 +20,6 @@ export default async function handler(
           const contentObjectId = req.query.id as string;
           const contentObject =
             await contentObjectService.getContentObjectById(contentObjectId);
-          console.log(contentObject);
           if (!contentObject) {
             res.status(404).send({ message: "Content Object Not Found" });
             break;
@@ -38,8 +37,7 @@ export default async function handler(
               await openAIServices.extractTextFromImage(imageUrl);
             const processedText =
               await openAIServices.getAPIResponse(extractedText);
-            console.log("open ai done");
-            const workbookBuffer = generateExcelFromReceipt(
+            const workbookBuffer = await generateExcelFromReceipt(
               JSON.parse(processedText),
             );
 

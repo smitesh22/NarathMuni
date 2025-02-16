@@ -46,8 +46,11 @@ jobs:
       - name: Verify the size and contents of app.zip
         run: |
           echo "Checking app.zip size and contents..."
-          du -sh app.zip
           unzip -l app.zip
+          echo "Top 10 node modules"
+          du -sh node_modules/* | sort -rh | head -n 10
+          echo "App base folder"
+          du -sh *
 
       - name: Fail if app.zip is too large
         run: |

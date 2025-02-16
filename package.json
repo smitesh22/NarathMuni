@@ -9,7 +9,6 @@
     "format": "prettier --write \"**/*.js\" && prettier --write \"**/*.ts\"",
     "build": "esbuild run-local-index.ts --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk",
     "build:start": "node dist/run-local-index.js"
-
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.713.0",
@@ -53,7 +52,6 @@
     "prisma": "^6.1.0",
     "tesseract.js": "^5.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2",
-    "xlsx": "^0.18.5"
+    "typescript": "^5.7.2"
   }
 }
