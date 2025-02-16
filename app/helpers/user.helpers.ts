@@ -1,6 +1,6 @@
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
-import { EMAIL, PASSWORD } from "../secrets/secrets";
+import {EMAIL, EMAIL_HOST, PASSWORD} from "../secrets/secrets";
 
 const createExtensions = () => {
   const expiry = new Date();
@@ -22,7 +22,7 @@ const createExtensions = () => {
 };
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: EMAIL_HOST,
   auth: {
     user: EMAIL,
     pass: PASSWORD,

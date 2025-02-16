@@ -66,12 +66,8 @@ const handler = async (
               res.status(400).json({ message: "Email already exists" });
               return;
             }
-            console.log("yayay")
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
-            console.log(email);
-            console.log(firstName);
-            console.log(lastName);
             const newUser = await userService.createUser({
               id: uuidv4(),
               email,
@@ -80,14 +76,14 @@ const handler = async (
               hashedPassword: hashedPassword,
               extensions: extensions,
             });
-            console.log(newUser);
+
             const mailOptions = {
               from: EMAIL,
               to: email,
               subject: "Your ZenPay One-Time Password (OTP)",
               text: otpEmailTemplate(extensions.otp, firstName),
             };
-            console.log(mailOptions);
+
             await transporter.sendMail(mailOptions);
 
             res.status(201).json(newUser);
