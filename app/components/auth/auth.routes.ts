@@ -57,16 +57,15 @@ router.get(
     }
 
     const foundUser = await userService.getUserByEmail(email);
-    /*
+
       const redirectUrl =
           env === "LOCAL"
               ? "http://localhost:5173/dashboard"
-              : "https://dev.ledgefast.com/dashboard";*/
-
-     // console.log(redirectUrl);
+              : "https://dev.ledgefast.com/dashboard";
+      console.log(redirectUrl);
       res.send(`
           <script>
-            const redirectUrl = "https://dev.ledgefast.com/dashboard";
+            const redirectUrl = "${redirectUrl}";
             window.opener.postMessage(
               { token: "${token}", user: ${JSON.stringify(foundUser)} },
               redirectUrl
