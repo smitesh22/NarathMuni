@@ -60,15 +60,16 @@ const handler = async (
               return;
             }
 
-            const user = await userService.getUserByEmail(email);
-            console.log(user);
-            if (user) {
+            const users = await userService.getAllUsers();
+            console.log(users);
+            if (users.some((user) => user.email === email)) {
               res.status(400).json({ message: "Email already exists" });
               return;
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
+            console.log(extensions);
             const newUser = await userService.createUser({
               id: uuidv4(),
               email,
