@@ -51,19 +51,19 @@ export const UserModel = {
     };
   },
 
-  getUserByEmail: async (email: string): Promise<User> => {
+  getUserByEmail: async (email: string): Promise<User|null> => {
     console.log(email);
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      throw new Error(`User with email ${email} not found`);
+      return null;
     }
-    console.log(user);
+
     return {
       ...user,
-      extensions: user.extensions as User["extensions"], // Cast to match the `User` type
+      extensions: user.extensions as User["extensions"],
     };
   },
 

@@ -61,7 +61,7 @@ const handler = async (
             }
 
             const user = await userService.getUserByEmail(email);
-
+            console.log(user);
             if (user) {
               res.status(400).json({ message: "Email already exists" });
               return;
