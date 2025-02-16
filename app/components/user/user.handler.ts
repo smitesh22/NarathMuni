@@ -87,8 +87,9 @@ const handler = async (
               html: otpEmailTemplate(extensions.otp, firstName),
             };
 
-            await transporter.sendMail(mailOptions);
-
+            const info = await transporter.sendMail(mailOptions);
+            console.log('info');
+            console.log(info);
             res.status(201).json(newUser);
           } catch (error) {
             console.error("Error during registration:", error);

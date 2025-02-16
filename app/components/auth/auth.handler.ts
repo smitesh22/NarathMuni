@@ -41,7 +41,7 @@ const handler = async (
                 from: EMAIL,
                 to: email,
                 subject: "Your ZenPay One-Time Password (OTP)",
-                text: otpEmailTemplate(extensions.otp, user.firstName),
+                html: otpEmailTemplate(extensions.otp, user.firstName),
               };
 
               await transporter.sendMail(mailOptions);
@@ -78,7 +78,7 @@ const handler = async (
             from: EMAIL,
             to: email,
             subject: "Your ZenPay One-Time Password (OTP)",
-            text: otpEmailTemplate(extensions.otp, user.firstName),
+            html: otpEmailTemplate(extensions.otp, user.firstName),
           };
 
           await transporter.sendMail(mailOptions);
