@@ -5,7 +5,7 @@ import { rateLimiter } from "../../helpers/routes.middlewares";
 import passport from "./auth.google.strategy";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../secrets/secrets";
+import {env, JWT_SECRET} from "../../secrets/secrets";
 import { userService } from "../user/user.service";
 
 const router = express.Router();
@@ -57,10 +57,18 @@ router.get(
     }
 
     const foundUser = await userService.getUserByEmail(email);
-
-    res.send(`
+      const redirectUrl =
+          env === "LOCAL"
+              ? "http://localhost:5173/dashboard"
+              : "https://www.ledgefast.com/dashboard";
+      console.log(redirectUrl);
+      res.send(`
           <script>
-            window.opener.postMessage({ token: "${token}", user: ${JSON.stringify(foundUser)} }, "http://localhost:5173/dashboard");
+            const redirectUrl = "${redirectUrl}";
+            window.opener.postMessage(
+              { token: "${token}", user: ${JSON.stringify(foundUser)} },
+              redirectUrl
+            );
             window.close();
           </script>
         `);
