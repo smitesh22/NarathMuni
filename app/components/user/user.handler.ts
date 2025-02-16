@@ -81,10 +81,9 @@ const handler = async (
               from: EMAIL,
               to: email,
               subject: "Your LedgeFast One-Time Password (OTP)",
-              text: otpEmailTemplate(extensions.otp, firstName),
+              html: otpEmailTemplate(extensions.otp, firstName),
             };
-            console.log(mailOptions);
-            console.log(transporter);
+
             await transporter.sendMail(mailOptions);
 
             res.status(201).json(newUser);
