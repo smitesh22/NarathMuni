@@ -49,14 +49,15 @@ jobs:
           -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
           echo "Packaging completed."fv
 
-      - name: Verify the size and contents of app.zip
+      - name: Extract and Analyze node_modules
         run: |
-          echo "Checking app.zip size and contents..."
-          unzip -l app.zip
-          echo "Top 10 node modules"
-          du -sh node_modules/* | sort -rh | head -n 10
-          echo "App base folder"
-          du -sh *
+          echo "Extracting app.zip..."
+          mkdir extracted
+          unzip -q app.zip -d extracted
+          echo "Checking extracted node_modules size and top 10 largest directories:"
+          du -sh extracted/node_modules/* --max-depth=1 | sort -rh | head -n 10
+          echo "Checking base folder sizes:"
+          du -sh extracted/* | sort -rh
 
       - name: Fail if app.zip is too large
         run: |
