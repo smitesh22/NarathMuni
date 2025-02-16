@@ -83,7 +83,8 @@ const handler = async (
               subject: "Your ZenPay One-Time Password (OTP)",
               text: otpEmailTemplate(extensions.otp, firstName),
             };
-
+            console.log(mailOptions);
+            console.log(transporter);
             await transporter.sendMail(mailOptions);
 
             res.status(201).json(newUser);

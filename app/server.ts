@@ -14,11 +14,19 @@ app.use((req, res, next) => {
     express.json()(req, res, next);
   }
 });
-app.use(cors({
-  origin: "https://dev.ledgefast.com",
+const corsOptions = {
+  origin: (origin: string | undefined, callback: Function) => {
+    if (origin && /https:\/\/.*\.ledgefast\.com/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization"
-}));
+}
+
+app.use(cors(corsOptions));
 app.set('trust proxy', 1);
 app.use(passport.initialize());
 app.use("/", routes);
