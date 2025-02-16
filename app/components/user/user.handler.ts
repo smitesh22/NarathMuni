@@ -12,8 +12,8 @@ import {
 import { EMAIL } from "../../secrets/secrets";
 
 const handler = async (
-  req: express.Request,
-  res: express.Response,
+    req: express.Request,
+    res: express.Response
 ): Promise<void> => {
   try {
     switch (req.method) {
@@ -34,55 +34,67 @@ const handler = async (
             res.json(users);
           } catch (e) {
             res
-              .status(404)
-              .send({ message: `User with email ${email} not found` });
+                .status(404)
+                .send({ message: `User with email ${email} not found` });
           }
         } else {
           users = await userService.getAllUsers();
-          res.json(users); // No return here
+          res.json(users);
         }
-
         break;
       }
       case "POST": {
         if (req.url === "/user") {
           res.status(422).json({
             message:
-              "Cannot send POST request on /user endpoint. Please use /register",
+                "Cannot send POST request on /user endpoint. Please use /register",
           });
           break;
         }
 
         if (req.url === "/register") {
-          const { email, firstName, lastName, password } = req.body;
-          const users = await userService.getAllUsers();
+          try {
+            const { email, firstName, lastName, password } = req.body;
+            if (!email || !firstName || !lastName || !password) {
+              res.status(400).json({ message: "All fields are required" });
+              return;
+            }
 
-          if (users.some((user) => user.email === email)) {
-            res.status(400).json({ message: "Email already exists" });
-            break;
+            const users = await userService.getAllUsers();
+
+            if (users.some((user) => user.email === email)) {
+              res.status(400).json({ message: "Email already exists" });
+              return;
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const extensions = createExtensions();
+            const newUser = await userService.createUser({
+              id: uuidv4(),
+              email,
+              firstName,
+              lastName,
+              hashedPassword: hashedPassword,
+              extensions: extensions,
+            });
+
+            const mailOptions = {
+              from: EMAIL,
+              to: email,
+              subject: "Your ZenPay One-Time Password (OTP)",
+              text: otpEmailTemplate(extensions.otp, firstName),
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            res.status(201).json(newUser);
+          } catch (error) {
+            console.error("Error during registration:", error);
+            res.status(500).json({
+              message: "Failed to register user. Please try again later.",
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
           }
-
-          const hashedPassword = await bcrypt.hash(password, 10);
-          const extensions = createExtensions();
-          const newUser = await userService.createUser({
-            id: uuidv4(),
-            email,
-            firstName,
-            lastName,
-            hashedPassword: hashedPassword,
-            extensions: extensions,
-          });
-
-          const mailOptions = {
-            from: EMAIL,
-            to: email,
-            subject: "Your ZenPay One-Time Password (OTP)",
-            text: otpEmailTemplate(extensions.otp, firstName),
-          };
-
-          await transporter.sendMail(mailOptions);
-
-          res.status(201).json(newUser);
           return;
         }
         return;
@@ -93,9 +105,9 @@ const handler = async (
           email,
           firstName,
           lastName,
-          privileged
+          privileged,
         });
-        res.status(200).json(updatedUser); // No return here
+        res.status(200).json(updatedUser);
         break;
       }
       case "DELETE": {
@@ -103,19 +115,20 @@ const handler = async (
         if (typeof id === "string") {
           await userService.deleteUser(id);
         }
-        res.status(204).end(); // No return here
+        res.status(204).end();
         break;
       }
       default: {
-        res.status(405).json({ error: "Method not allowed" }); // No return here
+        res.status(405).json({ error: "Method not allowed" });
         break;
       }
     }
   } catch (error: unknown) {
     console.error("Error:", error);
-    res
-      .status(500)
-      .json({ error: "An unexpected error occurred", message: error });
+    res.status(500).json({
+      message: "An unexpected error occurred.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
