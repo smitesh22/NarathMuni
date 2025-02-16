@@ -22,14 +22,17 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Installing all dependencies..."
-          npm install
-          npm dedupe
+          npm install --omit=dev
 
-      - name: Prune devDependencies
+      - name: Generate Prisma Client
+        run: |
+          npx prisma generate
+
+      - name: Uninstall Prisma and Typescript
         run: |
           echo "Removing devDependencies to reduce deployment size..."
-          npm ci --only=production
-          echo "Pruning completed."
+          npm uninstall prisma typescript
+          echo "Completed."
 
       - name: Bundle with esbuild (Tree-Shaking & Minification)
         run: |
