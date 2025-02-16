@@ -66,7 +66,7 @@ const handler = async (
               res.status(400).json({ message: "Email already exists" });
               return;
             }
-
+            console.log("yayay")
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
             console.log(email);
