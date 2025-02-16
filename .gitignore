@@ -16,3 +16,4 @@ app.zip
 # Environment variables and IDE configs
 .env
 .idea/
+.env.development

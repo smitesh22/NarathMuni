@@ -15,6 +15,7 @@ app.use((req, res, next) => {
   }
 });
 app.use(cors());
+app.set('trust proxy', 1);
 app.use(passport.initialize());
 app.use("/", routes);
 app.get("/check", async (req: express.Request, res: express.Response, next: express.NextFunction,) => {
