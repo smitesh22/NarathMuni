@@ -59,18 +59,16 @@ const handler = async (
               res.status(400).json({ message: "All fields are required" });
               return;
             }
-            console.log(req.body);
 
-            const users = await userService.getAllUsers();
+            const user = await userService.getUserByEmail(email);
 
-            if (users.some((user) => user.email === email)) {
+            if (user) {
               res.status(400).json({ message: "Email already exists" });
               return;
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const extensions = createExtensions();
-            console.log(extensions);
             const newUser = await userService.createUser({
               id: uuidv4(),
               email,
