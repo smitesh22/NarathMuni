@@ -92,6 +92,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   s3_bucket        = data.aws_s3_bucket.existing_bucket.bucket
   s3_key           = aws_s3_object.app_zip.key
   source_code_hash = filebase64sha256("../app.zip")
+  timeout          = 30
   lifecycle {
     ignore_changes = [environment]
   }
