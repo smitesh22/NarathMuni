@@ -54,8 +54,8 @@ jobs:
           echo "Extracting app.zip..."
           mkdir extracted
           unzip -q app.zip -d extracted
-          echo "Checking extracted node_modules size and top 10 largest directories:"
-          du -sh extracted/node_modules/* --max-depth=1 | sort -rh | head -n 10
+          echo "Checking extracted node_modules size and top 20 largest directories:"
+          du -sh extracted/node_modules/* | sort -rh | head -n 20
           echo "Checking base folder sizes:"
           du -sh extracted/* | sort -rh
 
