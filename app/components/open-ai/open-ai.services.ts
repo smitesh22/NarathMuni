@@ -3,10 +3,10 @@ import Tesseract from "tesseract.js";
 const openAI = new OpenAI();
 
 export const openAIServices = {
-  extractTextFromImage: async (imageBuffer: Buffer): Promise<string> => {
+  extractTextFromImage: async (image: string): Promise<string> => {
     const {
       data: { text },
-    } = await Tesseract.recognize(imageBuffer, "eng");
+    } = await Tesseract.recognize(image, "eng");
     return text.trim();
   },
   getAPIResponse: async (extractedText: string) => {

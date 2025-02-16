@@ -34,14 +34,8 @@ export default async function handler(
             contentObject.extensions[`${contentObjectExtension}/location`];
 
           if (imageUrl) {
-            const imageResponse = await axios.get(imageUrl, {
-              responseType: "arraybuffer",
-            });
-            const imageBuffer = Buffer.from(imageResponse.data);
-            console.log("extracting from tesseacrt");
             const extractedText =
-              await openAIServices.extractTextFromImage(imageBuffer);
-            console.log('extracted from tessearcr');
+              await openAIServices.extractTextFromImage(imageUrl);
             const processedText =
               await openAIServices.getAPIResponse(extractedText);
             console.log("open ai done");
