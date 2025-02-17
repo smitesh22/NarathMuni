@@ -1,7 +1,15 @@
 import OpenAI from "openai";
 import { TextractClient, AnalyzeDocumentCommand } from "@aws-sdk/client-textract";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../secrets/secrets";
 const openAI = new OpenAI();
-const textractClient = new TextractClient({ region: "us-west-1" });
+const textractClient = new TextractClient(
+    {
+      region: "eu-west-1" ,
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY
+      }
+    });
 
 export const openAIServices = {
   extractTextFromImage: async (imageBuffer: Buffer): Promise<string> => {
