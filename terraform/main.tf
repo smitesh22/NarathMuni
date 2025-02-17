@@ -101,6 +101,8 @@ resource "aws_lambda_function" "my_lambda_function" {
 
 resource "aws_api_gateway_rest_api" "my_api" {
   name = "Narath-Muni_API"
+
+  binary_media_types = ["image/jpeg", "image/png", "application/octet-stream", "multipart/form-data"]
 }
 
 resource "aws_api_gateway_resource" "proxy_resource" {
