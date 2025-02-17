@@ -125,6 +125,7 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.my_lambda_function.invoke_arn
+  content_handling        = "CONVERT_TO_BINARY"
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
