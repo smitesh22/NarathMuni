@@ -31,12 +31,14 @@ export default async function handler(
 
           const imageUrl =
             contentObject.extensions[`${contentObjectExtension}/location`];
-
           if (imageUrl) {
+            console.log('Tessearct Processing Image');
             const extractedText =
               await openAIServices.extractTextFromImage(imageUrl);
+            console.log('Sending to OpenAI Api')
             const processedText =
               await openAIServices.getAPIResponse(extractedText);
+            console.log('Received from open ai API');
             const workbookBuffer = await generateExcelFromReceipt(
               JSON.parse(processedText),
             );
