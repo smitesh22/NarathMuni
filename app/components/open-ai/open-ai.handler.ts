@@ -10,8 +10,8 @@ import axios from "axios";
 import generateExcelFromReceipt from "../helpers/generate-excel-from-receipt";
 
 export default async function handler(
-  req: express.Request,
-  res: express.Response,
+    req: express.Request,
+    res: express.Response
 ) {
   try {
     switch (req.method) {
@@ -19,7 +19,7 @@ export default async function handler(
         try {
           const contentObjectId = req.query.id as string;
           const contentObject =
-            await contentObjectService.getContentObjectById(contentObjectId);
+              await contentObjectService.getContentObjectById(contentObjectId);
           if (!contentObject) {
             res.status(404).send({ message: "Content Object Not Found" });
             break;
@@ -30,30 +30,37 @@ export default async function handler(
           }
 
           const imageUrl =
-            contentObject.extensions[`${contentObjectExtension}/location`];
+              contentObject.extensions[`${contentObjectExtension}/location`];
           if (imageUrl) {
-            console.log('Tessearct Processing Image');
+            console.log("Fetching image from URL");
+            const imageResponse = await axios.get(imageUrl, {
+              responseType: "arraybuffer",
+            });
+            const imageBuffer = Buffer.from(imageResponse.data, "binary");
+
+            console.log("Processing Image with AWS Textract");
             const extractedText =
-              await openAIServices.extractTextFromImage(imageUrl);
-            console.log('Sending to OpenAI Api')
+                await openAIServices.extractTextFromImage(imageBuffer);
+            console.log("Sending to OpenAI API");
             const processedText =
-              await openAIServices.getAPIResponse(extractedText);
-            console.log('Received from open ai API');
+                await openAIServices.getAPIResponse(extractedText);
+            console.log("Received from OpenAI API");
+
             const workbookBuffer = await generateExcelFromReceipt(
-              JSON.parse(processedText),
+                JSON.parse(processedText)
             );
 
             res.setHeader(
-              "Content-Disposition",
-              `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`,
+                "Content-Disposition",
+                `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`
             );
             res.setHeader(
-              "Content-Type",
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             );
             res.send(workbookBuffer);
           } else {
-            res.status(404).send({ message: "Image url does not exist" });
+            res.status(404).send({ message: "Image URL does not exist" });
           }
           break;
         } catch (err) {

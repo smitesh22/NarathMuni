@@ -1,16 +1,27 @@
 import OpenAI from "openai";
-import Tesseract from "tesseract.js";
+import { TextractClient, AnalyzeDocumentCommand } from "@aws-sdk/client-textract";
 const openAI = new OpenAI();
+const textractClient = new TextractClient({ region: "us-west-1" });
 
 export const openAIServices = {
-  extractTextFromImage: async (image: string): Promise<string> => {
-    console.log('In tesseract');
-    const {
-      data: { text },
-    } = await Tesseract.recognize(image, "eng");
-    console.log('processed')
-    return text.trim();
+  extractTextFromImage: async (imageBuffer: Buffer): Promise<string> => {
+    console.log("Processing image with AWS Textract");
+
+    const command = new AnalyzeDocumentCommand({
+      Document: { Bytes: imageBuffer },
+      FeatureTypes: ["TABLES", "FORMS"],
+    });
+
+    const response = await textractClient.send(command);
+
+    const text = response.Blocks?.filter((block) => block.BlockType === "LINE")
+        .map((block) => block.Text)
+        .join(" ");
+
+    console.log("Processed text:", text);
+    return text || "";
   },
+
   getAPIResponse: async (extractedText: string) => {
     const completion = await openAI.chat.completions.create({
       model: "gpt-4-turbo",
@@ -18,7 +29,7 @@ export const openAIServices = {
         {
           role: "system",
           content:
-            "You are a helpful assistant that extracts structured data from text.",
+              "You are a helpful assistant that extracts structured data from text.",
         },
         {
           role: "user",
@@ -48,12 +59,6 @@ You are an assistant that extracts structured data from receipts in a clean and 
   },
   "total_discount": "Total discount applied"
 }
-
-### Instructions:
-- Carefully extract all relevant fields from the provided text.
-- If any value is missing, return null for that key.
-- Ensure numerical values (e.g., price, discount, VAT) are represented as numbers and not strings.
-- Include relevant VAT categories and their respective amounts.
 
 ### Input Receipt Text:
 ${extractedText}
