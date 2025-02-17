@@ -4,9 +4,11 @@ const openAI = new OpenAI();
 
 export const openAIServices = {
   extractTextFromImage: async (image: string): Promise<string> => {
+    console.log('In tesseract');
     const {
       data: { text },
     } = await Tesseract.recognize(image, "eng");
+    console.log('processed')
     return text.trim();
   },
   getAPIResponse: async (extractedText: string) => {
