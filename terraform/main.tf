@@ -138,7 +138,6 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  stage_name  = "ignored"
 }
 
 resource "aws_api_gateway_stage" "prod" {
@@ -148,10 +147,6 @@ resource "aws_api_gateway_stage" "prod" {
 
   lifecycle {
     prevent_destroy = true
-  }
-
-  triggers = {
-    redeployment = timestamp()
   }
 }
 
