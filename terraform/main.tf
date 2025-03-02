@@ -108,7 +108,7 @@ resource "aws_api_gateway_rest_api" "my_api" {
     "application/octet-stream",
     "multipart/form-data",
     "application/vnd.ms-excel",  # For older .xls Excel files
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # For modern .xlsx Excel files
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/zip"
   ]
 }
