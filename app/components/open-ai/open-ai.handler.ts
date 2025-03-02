@@ -61,16 +61,11 @@ export default async function handler(
 
             console.log("✅ Excel File Created, Size:", workbookBuffer.length);
 
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename=${contentObject.extensions[`${contentObjectExtension}/name`]}.xlsx`
-            );
-            res.setHeader(
-                "Content-Type",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            );
-            console.log("📌 Sending Excel File...");
-            res.send(workbookBuffer);
+            const base64Data = workbookBuffer.toString("base64");
+
+            res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            res.setHeader("Content-Encoding", "base64");
+            res.send({ file: base64Data });
           } else {
             res.status(404).send({ message: "Image URL does not exist" });
           }
