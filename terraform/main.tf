@@ -140,17 +140,6 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
 }
 
-resource "aws_api_gateway_stage" "prod" {
-  rest_api_id   = aws_api_gateway_rest_api.my_api.id
-  stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.deployment.id
-
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = [deployment_id]
-  }
-}
-
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
