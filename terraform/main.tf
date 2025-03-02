@@ -136,15 +136,19 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  stage_name  = "ignored"
+  triggers = {
+    redeployment = timestamp()
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "prod" {
-  deployment_id = aws_api_gateway_deployment.deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.my_api.id
   stage_name    = "prod"
+  rest_api_id   = aws_api_gateway_rest_api.my_api.id
+  deployment_id = aws_api_gateway_deployment.deployment.id
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
