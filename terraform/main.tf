@@ -101,7 +101,6 @@ resource "aws_lambda_function" "my_lambda_function" {
 
 resource "aws_api_gateway_rest_api" "my_api" {
   name = "Narath-Muni_API"
-
   binary_media_types = [
     "image/jpeg",
     "image/png",
@@ -136,28 +135,16 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   content_handling        = "CONVERT_TO_BINARY"
 }
 
-resource "aws_api_gateway_method_response" "proxy_response" {
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  resource_id = aws_api_gateway_resource.proxy_resource.id
-  http_method = aws_api_gateway_method.proxy_any.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Content-Type" = true
-  }
+  stage_name  = "ignored"
 }
 
-resource "aws_api_gateway_integration_response" "proxy_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.my_api.id
-  resource_id = aws_api_gateway_resource.proxy_resource.id
-  http_method = aws_api_gateway_method.proxy_any.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
-  }
-
-  content_handling = "CONVERT_TO_BINARY"
+resource "aws_api_gateway_stage" "prod" {
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.my_api.id
+  stage_name    = "prod"
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
@@ -166,16 +153,6 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   function_name = aws_lambda_function.my_lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.my_api.execution_arn}/*"
-}
-
-resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [
-    aws_api_gateway_integration.proxy_lambda_integration,
-    aws_api_gateway_method_response.proxy_response,
-    aws_api_gateway_integration_response.proxy_integration_response
-  ]
-  rest_api_id = aws_api_gateway_rest_api.my_api.id
-  stage_name  = "prod"
 }
 
 resource "aws_dynamodb_table" "terraform_state_lock" {
