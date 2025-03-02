@@ -141,12 +141,13 @@ resource "aws_api_gateway_deployment" "deployment" {
 }
 
 resource "aws_api_gateway_stage" "prod" {
-  deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.my_api.id
   stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.deployment.id
 
   lifecycle {
     prevent_destroy = true
+    ignore_changes  = [deployment_id]
   }
 }
 
