@@ -18,8 +18,12 @@ export default async function handler(
       case "GET":
         try {
           const contentObjectId = req.query.id as string;
+          console.log("📌 Content Object ID:", contentObjectId);
+
           const contentObject =
               await contentObjectService.getContentObjectById(contentObjectId);
+
+          console.log("📌 Content Object Found:", !!contentObject);
           if (!contentObject) {
             res.status(404).send({ message: "Content Object Not Found" });
             break;
@@ -31,24 +35,31 @@ export default async function handler(
 
           const imageUrl =
               contentObject.extensions[`${contentObjectExtension}/location`];
+
+          console.log("📌 Image URL:", imageUrl);
+
           if (imageUrl) {
             console.log("Fetching image from URL");
             const imageResponse = await axios.get(imageUrl, {
               responseType: "arraybuffer",
             });
             const imageBuffer = Buffer.from(imageResponse.data, "binary");
-
+            console.log("✅ Image Fetched, Size:", imageBuffer.length);
             console.log("Processing Image with AWS Textract");
             const extractedText =
                 await openAIServices.extractTextFromImage(imageBuffer);
-            console.log("Sending to OpenAI API");
+            console.log("✅ Extracted Text:", extractedText);
+            console.log("📌 Sending to OpenAI for Processing...");
             const processedText =
                 await openAIServices.getAPIResponse(extractedText);
-            console.log("Received from OpenAI API");
+            console.log("✅ Processed Text:", processedText);
 
+            console.log("📌 Generating Excel File...");
             const workbookBuffer = await generateExcelFromReceipt(
                 JSON.parse(processedText)
             );
+
+            console.log("✅ Excel File Created, Size:", workbookBuffer.length);
 
             res.setHeader(
                 "Content-Disposition",
@@ -58,6 +69,7 @@ export default async function handler(
                 "Content-Type",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             );
+            console.log("📌 Sending Excel File...");
             res.send(workbookBuffer);
           } else {
             res.status(404).send({ message: "Image URL does not exist" });
