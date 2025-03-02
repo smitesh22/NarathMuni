@@ -58,7 +58,7 @@ export default async function handler(
                 "Content-Type",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             );
-            res.send(workbookBuffer.toString('base64'));
+            res.send(workbookBuffer);
           } else {
             res.status(404).send({ message: "Image URL does not exist" });
           }
