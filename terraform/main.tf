@@ -107,7 +107,7 @@ resource "aws_api_gateway_rest_api" "my_api" {
     "image/png",
     "application/octet-stream",
     "multipart/form-data",
-    "application/vnd.ms-excel",  # For older .xls Excel files
+    "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/zip"
   ]
@@ -136,6 +136,30 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
   content_handling        = "CONVERT_TO_BINARY"
 }
 
+resource "aws_api_gateway_method_response" "proxy_response" {
+  rest_api_id = aws_api_gateway_rest_api.my_api.id
+  resource_id = aws_api_gateway_resource.proxy_resource.id
+  http_method = aws_api_gateway_method.proxy_any.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "proxy_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.my_api.id
+  resource_id = aws_api_gateway_resource.proxy_resource.id
+  http_method = aws_api_gateway_method.proxy_any.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+
+  content_handling = "CONVERT_TO_BINARY"
+}
+
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -145,9 +169,13 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on   = [aws_api_gateway_integration.proxy_lambda_integration]
-  rest_api_id  = aws_api_gateway_rest_api.my_api.id
-  stage_name   = "prod"
+  depends_on = [
+    aws_api_gateway_integration.proxy_lambda_integration,
+    aws_api_gateway_method_response.proxy_response,
+    aws_api_gateway_integration_response.proxy_integration_response
+  ]
+  rest_api_id = aws_api_gateway_rest_api.my_api.id
+  stage_name  = "prod"
 }
 
 resource "aws_dynamodb_table" "terraform_state_lock" {
