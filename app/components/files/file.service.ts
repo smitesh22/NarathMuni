@@ -11,9 +11,10 @@ export const fileService = {
       metadata: (req, file, cb) => {
         cb(null, { fieldName: file.fieldname });
       },
-      contentType: multerS3.AUTO_CONTENT_TYPE,
+      contentType: (req, file, cb) => {
+        cb(null, file.mimetype); // 🔥 Ensure the correct Content-Type is set
+      },
       key: (req, file, cb) => {
-        // Generate unique filenames for uploaded files
         const fileName = `content/${Date.now()}_${file.originalname}`;
         cb(null, fileName);
       },
