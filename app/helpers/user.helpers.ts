@@ -41,7 +41,7 @@ const otpEmailTemplate = (otp: string, firstName: string) => `
   </head>
   <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="margin-bottom: 20px; text-align: left;">
-      <img src="https://dev.ledgefast.com/logo.png" alt="LedgeFast Logo" style="max-width: 150px; height: auto;">
+      <img src="https://dev.ledgefast.com/logo.svg" alt="LedgeFast Logo" style="max-width: 150px; height: auto;">
     </div>
     <p>Hello ${firstName},</p>
     <p><strong>${otp}</strong> is your one-time password (OTP) for the LedgeFast app.</p>
