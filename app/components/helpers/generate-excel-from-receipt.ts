@@ -46,7 +46,7 @@ const generateExcelFromReceipt = async (receiptData: any): Promise<Buffer> => {
         right: { style: "thin" },
       };
 
-      if (rowNumber === 1 || rowNumber === 11) {
+      if (rowNumber === 1 || rowNumber === 12) {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.fill = {
           type: "pattern",

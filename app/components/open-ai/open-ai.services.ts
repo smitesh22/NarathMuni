@@ -73,6 +73,7 @@ ${extractedText}
 
 ### Output:
 Provide only the JSON structure as described above, without any additional text or commentary.
+Always return a valid JSON object with no extra formatting or comments.
 `,
         },
       ],
