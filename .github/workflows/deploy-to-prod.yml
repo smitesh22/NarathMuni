@@ -3,7 +3,7 @@ name: CI/CD Pipeline for Prod
 on:
   push:
     branches:
-      - prod
+      - main
 
 jobs:
   terraform:
