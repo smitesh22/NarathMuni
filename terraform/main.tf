@@ -8,7 +8,7 @@ terraform {
 
   backend "s3" {
     bucket         = "narath-muni-v3"
-    key            = "terraform/state/app/terraform.tfstate"
+    key            = "terraform/state/${terraform.workspace}/terraform.tfstate"
     region         = "eu-west-1"
     encrypt        = true
   }
@@ -36,7 +36,7 @@ variable "lambda_role_name" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name               = var.lambda_role_name
+  name               = "${var.lambda_role_name}_${terraform.workspace}"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name   = "${var.lambda_role_name}_policy"
+  name   = "${var.lambda_role_name}_policy_${terraform.workspace}"
   policy = data.aws_iam_policy_document.lambda_policy.json
 }
 
@@ -79,13 +79,13 @@ data "aws_s3_bucket" "existing_bucket" {
 
 resource "aws_s3_object" "app_zip" {
   bucket = data.aws_s3_bucket.existing_bucket.bucket
-  key    = "app.zip"
+  key    = "${terraform.workspace}/app.zip"
   source = "../app.zip"
   etag   = filemd5("../app.zip")
 }
 
 resource "aws_lambda_function" "my_lambda_function" {
-  function_name    = "narath_muni"
+  function_name    = "narath_muni_${terraform.workspace}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "dist/index.handler"
   runtime          = "nodejs20.x"
@@ -100,7 +100,7 @@ resource "aws_lambda_function" "my_lambda_function" {
 }
 
 resource "aws_api_gateway_rest_api" "my_api" {
-  name = "Narath-Muni_API"
+  name = "Narath-Muni_API_${terraform.workspace}"
   binary_media_types = [
     "image/jpeg",
     "image/png",
@@ -138,7 +138,7 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  stage_name  = "prod"
+  stage_name  = terraform.workspace
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
@@ -161,5 +161,5 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
 }
 
 output "api_gateway_url" {
-  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/prod/"
+  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/${terraform.workspace}/"
 }

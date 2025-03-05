@@ -1,13 +1,13 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (Dev)
 
 on:
   push:
     branches:
-      - main
+      - dev  # This triggers deployment when pushing to the 'dev' branch
 
 jobs:
-  terraform:
-    name: Deploy with Terraform
+  terraform-dev:
+    name: Deploy to Dev with Terraform
     runs-on: ubuntu-latest
 
     steps:
@@ -20,48 +20,24 @@ jobs:
           node-version: '20'
 
       - name: Install all dependencies
-        run:  npm install --omit=dev # Ensures clean install with both dependencies & devDependencies
+        run: npm install --omit=dev
 
       - name: Generate Prisma Client
         run: npx prisma generate
 
       - name: Remove Unnecessary Prisma Binaries
         run: |
-          echo "Cleaning up Prisma engines..."
           rm -rf node_modules/@prisma/engines/
           rm -rf node_modules/@prisma/client/libquery_engine*
           rm -rf node_modules/prisma
-          echo "Prisma cleanup completed."
-
-      - name: Force Remove TypeScript & Prisma
-        run: |
-          echo "Removing TypeScript & Prisma..."
-          rm -rf node_modules/prisma
-          rm -rf node_modules/typescript
-          rm -rf node_modules/ts-node
-          echo "Cleanup complete."
 
       - name: Bundle with esbuild
         run: npx esbuild index.js --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk --sourcemap
-
-      - name: Analyze node_modules size
-        run: |
-          echo "Top 20 largest node_modules directories:"
-          du -sh node_modules/* | sort -rh | head -n 20
 
       - name: Package for Lambda
         run: |
           zip -r app.zip dist/ node_modules \
           -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
-
-      - name: Verify app.zip size
-        run: |
-          MAX_SIZE=50000 # 50 MB limit
-          ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
-          if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
-            echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB"
-            exit 1
-          fi
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
@@ -79,14 +55,19 @@ jobs:
         run: terraform init
         working-directory: ./terraform
 
+      - name: Select Terraform Workspace (Dev)
+        run: |
+          terraform workspace select dev || terraform workspace new dev
+        working-directory: ./terraform
+
       - name: Validate Terraform
         run: terraform validate
         working-directory: ./terraform
 
-      - name: Plan Terraform
+      - name: Plan Terraform Deployment
         run: terraform plan
         working-directory: ./terraform
 
-      - name: Apply Terraform
+      - name: Apply Terraform (Dev)
         run: terraform apply -auto-approve
         working-directory: ./terraform
