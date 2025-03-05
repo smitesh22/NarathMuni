@@ -26,26 +26,26 @@ variable "region" {
 }
 
 variable "lambda_role_name" {
-  type    = string
+  type        = string
   description = "Lambda IAM Role Name"
 }
 
 variable "lambda_function_name" {
-  type    = string
+  type        = string
   description = "Lambda Function Name"
 }
 
 variable "api_gateway_name" {
-  type    = string
+  type        = string
   description = "API Gateway Name"
 }
 
 variable "app_zip" {
-  type    = string
+  type        = string
   description = "App zip file name"
 }
 
-# Lambda Role and Permissions (common for both dev and prod)
+# Lambda Role and Permissions
 resource "aws_iam_role" "lambda_role" {
   name               = var.lambda_role_name
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
@@ -84,7 +84,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-# S3 for Lambda Zip (common for both dev and prod)
+# S3 for Lambda Deployment
 data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
 }
@@ -96,7 +96,7 @@ resource "aws_s3_object" "app_zip" {
   etag   = filemd5("../app.zip")
 }
 
-# Lambda Function (common for both dev and prod)
+# Lambda Function (without overwriting env vars)
 resource "aws_lambda_function" "my_lambda_function" {
   function_name    = var.lambda_function_name
   role             = aws_iam_role.lambda_role.arn
@@ -107,14 +107,15 @@ resource "aws_lambda_function" "my_lambda_function" {
   source_code_hash = filebase64sha256("../app.zip")
   timeout          = 30
   memory_size      = 1024
+
   lifecycle {
     ignore_changes = [environment]
   }
 }
 
-# API Gateway (common for both dev and prod)
+# API Gateway
 resource "aws_api_gateway_rest_api" "my_api" {
-  name             = var.api_gateway_name
+  name = var.api_gateway_name
   binary_media_types = [
     "image/jpeg",
     "image/png",
@@ -163,7 +164,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.my_api.execution_arn}/*"
 }
 
-# DynamoDB for state locking (common for both dev and prod)
+# DynamoDB for Terraform State Locking
 resource "aws_dynamodb_table" "terraform_state_lock" {
   name         = "terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
