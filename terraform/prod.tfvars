@@ -1,0 +1,5 @@
+region               = "eu-west-1"
+lambda_role_name     = "narath_muni_lambda_role_prod"
+lambda_function_name = "narath_muni_lambda_prod"
+api_gateway_name     = "narath_muni_api_prod"
+app_zip              = "app.zip"

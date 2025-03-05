@@ -1,0 +1,92 @@
+name: CI/CD Pipeline for Prod
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  terraform:
+    name: Deploy with Terraform (Prod)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Install all dependencies
+        run: npm install --omit=dev # Ensures clean install with both dependencies & devDependencies
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Remove Unnecessary Prisma Binaries
+        run: |
+          echo "Cleaning up Prisma engines..."
+          rm -rf node_modules/@prisma/engines/
+          rm -rf node_modules/@prisma/client/libquery_engine*
+          rm -rf node_modules/prisma
+          echo "Prisma cleanup completed."
+
+      - name: Force Remove TypeScript & Prisma
+        run: |
+          echo "Removing TypeScript & Prisma..."
+          rm -rf node_modules/prisma
+          rm -rf node_modules/typescript
+          rm -rf node_modules/ts-node
+          echo "Cleanup complete."
+
+      - name: Bundle with esbuild
+        run: npx esbuild index.js --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk --sourcemap
+
+      - name: Analyze node_modules size
+        run: |
+          echo "Top 20 largest node_modules directories:"
+          du -sh node_modules/* | sort -rh | head -n 20
+
+      - name: Package for Lambda
+        run: |
+          zip -r app.zip dist/ node_modules \
+          -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
+
+      - name: Verify app.zip size
+        run: |
+          MAX_SIZE=50000 # 50 MB limit
+          ACTUAL_SIZE=$(du -k "app.zip" | cut -f1)
+          if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "Error: app.zip size is too large: ${ACTUAL_SIZE} KB"
+            exit 1
+          fi
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Initialize Terraform with S3 backend
+        run: terraform init -backend-config="bucket=narath-muni-v3" -backend-config="key=terraform/state/app/terraform.tfstate" -backend-config="region=eu-west-1"
+        working-directory: ./terraform
+
+      - name: Validate Terraform
+        run: terraform validate
+        working-directory: ./terraform
+
+      - name: Plan Terraform
+        run: terraform plan -var-file=prod.tfvars
+        working-directory: ./terraform
+
+      - name: Apply Terraform
+        run: terraform apply -auto-approve -var-file=prod.tfvars
+        working-directory: ./terraform

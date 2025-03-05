@@ -1,13 +1,13 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for Dev
 
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   terraform:
-    name: Deploy with Terraform
+    name: Deploy with Terraform (Dev)
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
           node-version: '20'
 
       - name: Install all dependencies
-        run:  npm install --omit=dev # Ensures clean install with both dependencies & devDependencies
+        run: npm install --omit=dev # Ensures clean install with both dependencies & devDependencies
 
       - name: Generate Prisma Client
         run: npx prisma generate
@@ -76,7 +76,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Initialize Terraform with S3 backend
-        run: terraform init
+        run: terraform init -backend-config="bucket=narath-muni-v3" -backend-config="key=terraform/state/app/terraform.tfstate" -backend-config="region=eu-west-1"
         working-directory: ./terraform
 
       - name: Validate Terraform
@@ -84,9 +84,9 @@ jobs:
         working-directory: ./terraform
 
       - name: Plan Terraform
-        run: terraform plan
+        run: terraform plan -var-file=dev.tfvars
         working-directory: ./terraform
 
       - name: Apply Terraform
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file=dev.tfvars
         working-directory: ./terraform
