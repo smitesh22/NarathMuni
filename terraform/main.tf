@@ -9,7 +9,7 @@ terraform {
   backend "s3" {
     bucket         = "narath-muni-v3"
     key            = "terraform/state/app/terraform.tfstate"
-    region         = "eu-west-1"
+    region         = var.region
     encrypt        = true
   }
 
@@ -25,16 +25,27 @@ variable "region" {
   default = "eu-west-1"
 }
 
-variable "app_zip" {
-  type    = string
-  default = "app.zip"
-}
-
 variable "lambda_role_name" {
   type    = string
-  default = "narath_muni_lambda_role"
+  description = "Lambda IAM Role Name"
 }
 
+variable "lambda_function_name" {
+  type    = string
+  description = "Lambda Function Name"
+}
+
+variable "api_gateway_name" {
+  type    = string
+  description = "API Gateway Name"
+}
+
+variable "app_zip" {
+  type    = string
+  description = "App zip file name"
+}
+
+# Lambda Role and Permissions (common for both dev and prod)
 resource "aws_iam_role" "lambda_role" {
   name               = var.lambda_role_name
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
@@ -73,6 +84,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
+# S3 for Lambda Zip (common for both dev and prod)
 data "aws_s3_bucket" "existing_bucket" {
   bucket = "narath-muni-v3"
 }
@@ -84,8 +96,9 @@ resource "aws_s3_object" "app_zip" {
   etag   = filemd5("../app.zip")
 }
 
+# Lambda Function (common for both dev and prod)
 resource "aws_lambda_function" "my_lambda_function" {
-  function_name    = "narath_muni"
+  function_name    = var.lambda_function_name
   role             = aws_iam_role.lambda_role.arn
   handler          = "dist/index.handler"
   runtime          = "nodejs20.x"
@@ -99,8 +112,9 @@ resource "aws_lambda_function" "my_lambda_function" {
   }
 }
 
+# API Gateway (common for both dev and prod)
 resource "aws_api_gateway_rest_api" "my_api" {
-  name = "Narath-Muni_API"
+  name             = var.api_gateway_name
   binary_media_types = [
     "image/jpeg",
     "image/png",
@@ -136,7 +150,7 @@ resource "aws_api_gateway_integration" "proxy_lambda_integration" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.proxy_lambda_integration]
+  depends_on  = [aws_api_gateway_integration.proxy_lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   stage_name  = "prod"
 }
@@ -149,6 +163,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.my_api.execution_arn}/*"
 }
 
+# DynamoDB for state locking (common for both dev and prod)
 resource "aws_dynamodb_table" "terraform_state_lock" {
   name         = "terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
