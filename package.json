@@ -8,7 +8,9 @@
     "dev": "nodemon run-local-index.ts",
     "format": "prettier --write \"**/*.js\" && prettier --write \"**/*.ts\"",
     "build": "esbuild run-local-index.ts --bundle --platform=node --target=node20 --outdir=dist --external:aws-sdk",
-    "build:start": "node dist/run-local-index.js"
+    "build:start": "node dist/run-local-index.js",
+    "migrate:deploy:prod": "export $(cat .env.production | xargs) && npx prisma migrate deploy && npx prisma generate",
+    "migrate:deploy:dev": "export $(cat .env.development | xargs) && npx prisma migrate deploy && npx prisma generate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.713.0",
