@@ -8,7 +8,7 @@ terraform {
 
   backend "s3" {
     bucket         = "narath-muni-v3"
-    key            = "terraform/state/app/terraform.tfstate"
+    key            = "terraform/state/${var.env}/terraform.tfstate"
     region         = var.region
     encrypt        = true
   }
@@ -43,6 +43,71 @@ variable "api_gateway_name" {
 variable "app_zip" {
   type        = string
   description = "App zip file name"
+}
+
+variable "env" {
+  type    = string
+  default = "dev"
+}
+# Modify SSM Parameter names based on uppercase environment
+data "aws_ssm_parameter" "access_key_id" {
+  name = "/lambda/${upper(var.env)}/ACCESS_KEY_ID"
+}
+
+data "aws_ssm_parameter" "database_url" {
+  name = "/lambda/${upper(var.env)}/DATABASE_URL"
+}
+
+data "aws_ssm_parameter" "email" {
+  name = "/lambda/${upper(var.env)}/EMAIL"
+}
+
+data "aws_ssm_parameter" "email_host" {
+  name = "/lambda/${upper(var.env)}/EMAIL_HOST"
+}
+
+data "aws_ssm_parameter" "env" {
+  name = "/lambda/${upper(var.env)}/ENV"
+}
+
+data "aws_ssm_parameter" "google_client_id" {
+  name = "/lambda/${upper(var.env)}/GOOGLE_CLIENT_ID"
+}
+
+data "aws_ssm_parameter" "google_client_secret" {
+  name = "/lambda/${upper(var.env)}/GOOGLE_CLIENT_SECRET"
+}
+
+data "aws_ssm_parameter" "jwt_secret" {
+  name = "/lambda/${upper(var.env)}/JWT_SECRET"
+}
+
+data "aws_ssm_parameter" "openai_api_key" {
+  name = "/lambda/${upper(var.env)}/OPENAI_API_KEY"
+}
+
+data "aws_ssm_parameter" "password" {
+  name = "/lambda/${upper(var.env)}/PASSWORD"
+}
+
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/lambda/${upper(var.env)}/S3_BUCKET_NAME"
+}
+
+data "aws_ssm_parameter" "secret_access_key" {
+  name = "/lambda/${upper(var.env)}/SECRET_ACCESS_KEY"
+}
+
+data "aws_ssm_parameter" "stripe_key" {
+  name = "/lambda/${upper(var.env)}/STRIPE_KEY"
+}
+
+data "aws_ssm_parameter" "stripe_priceid_monthly" {
+  name = "/lambda/${upper(var.env)}/STRIPE_PRICEID_MONTHLY"
+}
+
+data "aws_ssm_parameter" "stripe_priceid_yearly" {
+  name = "/lambda/${upper(var.env)}/STRIPE_PRICEID_YEARLY"
 }
 
 # Lambda Role and Permissions
@@ -108,8 +173,24 @@ resource "aws_lambda_function" "my_lambda_function" {
   timeout          = 30
   memory_size      = 1024
 
-  lifecycle {
-    ignore_changes = [environment]
+  environment {
+    variables = {
+      ACCESS_KEY_ID        = data.aws_ssm_parameter.access_key_id.value
+      DATABASE_URL         = data.aws_ssm_parameter.database_url.value
+      EMAIL                = data.aws_ssm_parameter.email.value
+      EMAIL_HOST           = data.aws_ssm_parameter.email_host.value
+      ENV                  = data.aws_ssm_parameter.env.value
+      GOOGLE_CLIENT_ID     = data.aws_ssm_parameter.google_client_id.value
+      GOOGLE_CLIENT_SECRET = data.aws_ssm_parameter.google_client_secret.value
+      JWT_SECRET           = data.aws_ssm_parameter.jwt_secret.value
+      OPENAI_API_KEY       = data.aws_ssm_parameter.openai_api_key.value
+      PASSWORD             = data.aws_ssm_parameter.password.value
+      S3_BUCKET_NAME       = data.aws_ssm_parameter.s3_bucket_name.value
+      SECRET_ACCESS_KEY    = data.aws_ssm_parameter.secret_access_key.value
+      STRIPE_KEY           = data.aws_ssm_parameter.stripe_key.value
+      STRIPE_PRICEID_MONTHLY = data.aws_ssm_parameter.stripe_priceid_monthly.value
+      STRIPE_PRICEID_YEARLY  = data.aws_ssm_parameter.stripe_priceid_yearly.value
+    }
   }
 }
 
@@ -166,7 +247,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 
 # DynamoDB for Terraform State Locking
 resource "aws_dynamodb_table" "terraform_state_lock" {
-  name         = "terraform-locks"
+  name         = "terraform-locks-${var.env}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
@@ -177,5 +258,5 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
 }
 
 output "api_gateway_url" {
-  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/prod/"
+  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/${var.env}/"
 }

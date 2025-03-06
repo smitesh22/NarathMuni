@@ -76,7 +76,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Initialize Terraform with S3 backend
-        run: terraform init -backend-config="bucket=narath-muni-v3" -backend-config="key=terraform/state/app/terraform.tfstate" -backend-config="region=eu-west-1"
+        run: terraform init -backend-config="bucket=narath-muni-v3" -backend-config="key=terraform/state/prod/terraform.tfstate" -backend-config="region=eu-west-1"
         working-directory: ./terraform
 
       - name: Validate Terraform
