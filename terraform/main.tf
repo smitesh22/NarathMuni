@@ -172,7 +172,7 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 
 # DynamoDB for Terraform State Locking
 resource "aws_dynamodb_table" "terraform_state_lock" {
-  name         = "terraform-locks"
+  name         = "terraform-locks-${var.env}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
@@ -183,5 +183,5 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
 }
 
 output "api_gateway_url" {
-  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/prod/"
+  value = "https://${aws_api_gateway_rest_api.my_api.id}.execute-api.${var.region}.amazonaws.com/${var.env}/"
 }
