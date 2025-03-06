@@ -17,3 +17,4 @@ app.zip
 .env
 .idea/
 .env.development
+.env.production
