@@ -49,67 +49,66 @@ variable "env" {
   type    = string
   default = "dev"
 }
-
+# Modify SSM Parameter names based on uppercase environment
 data "aws_ssm_parameter" "access_key_id" {
-  name = "/lambda/DEV/ACCESS_KEY_ID"
+  name = "/lambda/${upper(var.env)}/ACCESS_KEY_ID"
 }
 
 data "aws_ssm_parameter" "database_url" {
-  name = "/lambda/DEV/DATABASE_URL"
+  name = "/lambda/${upper(var.env)}/DATABASE_URL"
 }
 
 data "aws_ssm_parameter" "email" {
-  name = "/lambda/DEV/EMAIL"
+  name = "/lambda/${upper(var.env)}/EMAIL"
 }
 
 data "aws_ssm_parameter" "email_host" {
-  name = "/lambda/DEV/EMAIL_HOST"
+  name = "/lambda/${upper(var.env)}/EMAIL_HOST"
 }
 
 data "aws_ssm_parameter" "env" {
-  name = "/lambda/DEV/ENV"
+  name = "/lambda/${upper(var.env)}/ENV"
 }
 
 data "aws_ssm_parameter" "google_client_id" {
-  name = "/lambda/DEV/GOOGLE_CLIENT_ID"
+  name = "/lambda/${upper(var.env)}/GOOGLE_CLIENT_ID"
 }
 
 data "aws_ssm_parameter" "google_client_secret" {
-  name = "/lambda/DEV/GOOGLE_CLIENT_SECRET"
+  name = "/lambda/${upper(var.env)}/GOOGLE_CLIENT_SECRET"
 }
 
 data "aws_ssm_parameter" "jwt_secret" {
-  name = "/lambda/DEV/JWT_SECRET"
+  name = "/lambda/${upper(var.env)}/JWT_SECRET"
 }
 
 data "aws_ssm_parameter" "openai_api_key" {
-  name = "/lambda/DEV/OPENAI_API_KEY"
+  name = "/lambda/${upper(var.env)}/OPENAI_API_KEY"
 }
 
 data "aws_ssm_parameter" "password" {
-  name = "/lambda/DEV/PASSWORD"
+  name = "/lambda/${upper(var.env)}/PASSWORD"
 }
 
 data "aws_ssm_parameter" "s3_bucket_name" {
-  name = "/lambda/DEV/S3_BUCKET_NAME"
+  name = "/lambda/${upper(var.env)}/S3_BUCKET_NAME"
 }
 
 data "aws_ssm_parameter" "secret_access_key" {
-  name = "/lambda/DEV/SECRET_ACCESS_KEY"
+  name = "/lambda/${upper(var.env)}/SECRET_ACCESS_KEY"
 }
 
 data "aws_ssm_parameter" "stripe_key" {
-  name = "/lambda/DEV/STRIPE_KEY"
+  name = "/lambda/${upper(var.env)}/STRIPE_KEY"
 }
 
 data "aws_ssm_parameter" "stripe_priceid_monthly" {
-  name = "/lambda/DEV/STRIPE_PRICEID_MONTHLY"
+  name = "/lambda/${upper(var.env)}/STRIPE_PRICEID_MONTHLY"
 }
 
 data "aws_ssm_parameter" "stripe_priceid_yearly" {
-  name = "/lambda/DEV/STRIPE_PRICEID_YEARLY"
+  name = "/lambda/${upper(var.env)}/STRIPE_PRICEID_YEARLY"
 }
-
 
 # Lambda Role and Permissions
 resource "aws_iam_role" "lambda_role" {
