@@ -1,6 +1,4 @@
 import { UserModel } from "../../database/models/user";
-import { Prisma } from "@prisma/client";
-import { use } from "passport";
 
 export const userService = {
   createUser: (data: {
