@@ -8,7 +8,7 @@ terraform {
 
   backend "s3" {
     bucket         = "narath-muni-v3"
-    key            = "terraform/state/app/terraform.tfstate"
+    key            = "terraform/state/${var.env}/terraform.tfstate"
     region         = var.region
     encrypt        = true
   }
@@ -44,6 +44,12 @@ variable "app_zip" {
   type        = string
   description = "App zip file name"
 }
+
+variable "env" {
+  type    = string
+  default = "dev"
+}
+
 
 # Lambda Role and Permissions
 resource "aws_iam_role" "lambda_role" {
