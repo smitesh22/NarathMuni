@@ -50,6 +50,66 @@ variable "env" {
   default = "dev"
 }
 
+data "aws_ssm_parameter" "access_key_id" {
+  name = "/lambda/DEV/ACCESS_KEY_ID"
+}
+
+data "aws_ssm_parameter" "database_url" {
+  name = "/lambda/DEV/DATABASE_URL"
+}
+
+data "aws_ssm_parameter" "email" {
+  name = "/lambda/DEV/EMAIL"
+}
+
+data "aws_ssm_parameter" "email_host" {
+  name = "/lambda/DEV/EMAIL_HOST"
+}
+
+data "aws_ssm_parameter" "env" {
+  name = "/lambda/DEV/ENV"
+}
+
+data "aws_ssm_parameter" "google_client_id" {
+  name = "/lambda/DEV/GOOGLE_CLIENT_ID"
+}
+
+data "aws_ssm_parameter" "google_client_secret" {
+  name = "/lambda/DEV/GOOGLE_CLIENT_SECRET"
+}
+
+data "aws_ssm_parameter" "jwt_secret" {
+  name = "/lambda/DEV/JWT_SECRET"
+}
+
+data "aws_ssm_parameter" "openai_api_key" {
+  name = "/lambda/DEV/OPENAI_API_KEY"
+}
+
+data "aws_ssm_parameter" "password" {
+  name = "/lambda/DEV/PASSWORD"
+}
+
+data "aws_ssm_parameter" "s3_bucket_name" {
+  name = "/lambda/DEV/S3_BUCKET_NAME"
+}
+
+data "aws_ssm_parameter" "secret_access_key" {
+  name = "/lambda/DEV/SECRET_ACCESS_KEY"
+}
+
+data "aws_ssm_parameter" "stripe_key" {
+  name = "/lambda/DEV/STRIPE_KEY"
+}
+
+data "aws_ssm_parameter" "stripe_priceid_monthly" {
+  name = "/lambda/DEV/STRIPE_PRICEID_MONTHLY"
+}
+
+data "aws_ssm_parameter" "stripe_priceid_yearly" {
+  name = "/lambda/DEV/STRIPE_PRICEID_YEARLY"
+}
+
 
 # Lambda Role and Permissions
 resource "aws_iam_role" "lambda_role" {
@@ -114,8 +174,24 @@ resource "aws_lambda_function" "my_lambda_function" {
   timeout          = 30
   memory_size      = 1024
 
-  lifecycle {
-    ignore_changes = [environment]
+  environment {
+    variables = {
+      ACCESS_KEY_ID        = data.aws_ssm_parameter.access_key_id.value
+      DATABASE_URL         = data.aws_ssm_parameter.database_url.value
+      EMAIL                = data.aws_ssm_parameter.email.value
+      EMAIL_HOST           = data.aws_ssm_parameter.email_host.value
+      ENV                  = data.aws_ssm_parameter.env.value
+      GOOGLE_CLIENT_ID     = data.aws_ssm_parameter.google_client_id.value
+      GOOGLE_CLIENT_SECRET = data.aws_ssm_parameter.google_client_secret.value
+      JWT_SECRET           = data.aws_ssm_parameter.jwt_secret.value
+      OPENAI_API_KEY       = data.aws_ssm_parameter.openai_api_key.value
+      PASSWORD             = data.aws_ssm_parameter.password.value
+      S3_BUCKET_NAME       = data.aws_ssm_parameter.s3_bucket_name.value
+      SECRET_ACCESS_KEY    = data.aws_ssm_parameter.secret_access_key.value
+      STRIPE_KEY           = data.aws_ssm_parameter.stripe_key.value
+      STRIPE_PRICEID_MONTHLY = data.aws_ssm_parameter.stripe_priceid_monthly.value
+      STRIPE_PRICEID_YEARLY  = data.aws_ssm_parameter.stripe_priceid_yearly.value
+    }
   }
 }
 
