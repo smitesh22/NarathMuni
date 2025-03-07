@@ -47,7 +47,7 @@ export default async function handler(
                 await openAIServices.getAPIResponse(extractedText);
 
             const workbookBuffer = await generateExcelFromReceipt(
-                JSON.parse(processedText)
+                processedText
             );
 
             const base64Data = workbookBuffer.toString("base64");
