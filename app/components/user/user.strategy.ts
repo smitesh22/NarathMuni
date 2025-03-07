@@ -10,7 +10,7 @@ passport.use(
       try {
         const user = await userService.getUserByEmail(email);
         if (!user) {
-          return done(null, false, { message: "User not found" });
+          return done(null, false, { message: "Please register your email!" });
         }
 
         const isPasswordValid = await bcrypt.compare(

@@ -49,10 +49,13 @@ jobs:
           echo "Top 20 largest node_modules directories:"
           du -sh node_modules/* | sort -rh | head -n 20
 
-      - name: Package for Lambda
+      - name: Package & Compress for Lambda
         run: |
-          zip -r app.zip dist/ node_modules \
+          echo "Compressing app for Lambda..."
+          zip -r9 app.zip dist/ node_modules \
           -x "*.ts" "*.md" "tests/**" "docs/**" "node_modules/.cache/**" "node_modules/aws-sdk/**" "node_modules/.bin/**"
+          echo "Compression complete. Final size:"
+          du -h app.zip
 
       - name: Verify app.zip size
         run: |
