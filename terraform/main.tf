@@ -110,6 +110,10 @@ data "aws_ssm_parameter" "stripe_priceid_yearly" {
   name = "/lambda/${upper(var.env)}/STRIPE_PRICEID_YEARLY"
 }
 
+data "aws_ssm_parameter" "cloud_vision_api" {
+  name = "/lambda/${upper(var.env)}/CLOUD_VISION_API_KEY"
+}
+
 # Lambda Role and Permissions
 resource "aws_iam_role" "lambda_role" {
   name               = var.lambda_role_name
@@ -190,6 +194,7 @@ resource "aws_lambda_function" "my_lambda_function" {
       STRIPE_KEY           = data.aws_ssm_parameter.stripe_key.value
       STRIPE_PRICEID_MONTHLY = data.aws_ssm_parameter.stripe_priceid_monthly.value
       STRIPE_PRICEID_YEARLY  = data.aws_ssm_parameter.stripe_priceid_yearly.value
+      CLOUD_VISION_API_KEY   = data.aws_ssm_parameter.cloud_vision_api.value
     }
   }
 }
