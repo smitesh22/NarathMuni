@@ -40,7 +40,7 @@ const handler = async (
               const mailOptions = {
                 from: EMAIL,
                 to: email,
-                subject: "Your ZenPay One-Time Password (OTP)",
+                subject: "Your LedgeFast One-Time Password (OTP)",
                 html: otpEmailTemplate(extensions.otp, user.firstName),
               };
 
@@ -77,7 +77,7 @@ const handler = async (
           const mailOptions = {
             from: EMAIL,
             to: email,
-            subject: "Your ZenPay One-Time Password (OTP)",
+            subject: "Your LedgeFast One-Time Password (OTP)",
             html: otpEmailTemplate(extensions.otp, user.firstName),
           };
 
