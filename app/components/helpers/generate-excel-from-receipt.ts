@@ -22,7 +22,7 @@ const generateExcelFromReceipt = async (receiptData: any): Promise<Buffer> => {
     ["0% VAT", receiptData.tax_breakdown?.["0% VAT"] || "N/A"],
     ["13.5% VAT", receiptData.tax_breakdown?.["13.5% VAT"] || "N/A"],
     ["", ""],
-    ["Item Name", "Quantity", "Price", "Discount", "Tax Category"],
+    ["Item Name", "Quantity", "Unit Price", "Total Price", "Discount", "Final Price", "Tax Category"],
   ];
 
   data.forEach((row) => worksheet.addRow(row));
@@ -31,8 +31,10 @@ const generateExcelFromReceipt = async (receiptData: any): Promise<Buffer> => {
     worksheet.addRow([
       item.name || "N/A",
       item.quantity || "N/A",
-      item.price || "N/A",
-      item.discount || "N/A",
+      item.unit_price || "N/A",
+      item.total_price || 'N/A',
+      item.discount || 'N/A',
+      item.final_price || "N/A",
       item.category || "N/A",
     ]);
   });
