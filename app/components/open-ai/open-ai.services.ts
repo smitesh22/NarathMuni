@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { CLOUD_VISION_API_KEY } from "../../secrets/secrets";
-import { ImageAnnotatorClient } from "@google-cloud/vision";
-import { GoogleAuth } from "google-auth-library";
+import {CLOUD_VISION_API_KEY} from "../../secrets/secrets";
+import {ImageAnnotatorClient} from "@google-cloud/vision";
+import {GoogleAuth} from "google-auth-library";
 
 const openAI = new OpenAI();
 
@@ -15,7 +15,7 @@ export const openAIServices = {
     extractTextFromImage: async (imageBuffer: Buffer): Promise<string> => {
         try {
             const [result] = await client.textDetection({
-                image: { content: imageBuffer },
+                image: {content: imageBuffer},
             });
 
             const detectedText = result.fullTextAnnotation?.text || "";
@@ -85,6 +85,13 @@ Return a valid JSON object with no extra formatting.
                     }
                 ]
             });
+
+            const jsonResponse = completion.choices[0].message?.content || "{}";
+
+            // Remove accidental markdown formatting (triple backticks, etc.)
+            const cleanJson = jsonResponse.replace(/```json|```/g, "").trim();
+            console.log(cleanJson);
+            return JSON.parse(cleanJson);
         } catch (error) {
             console.error("Error parsing API response:", error);
             return {};
