@@ -66,7 +66,7 @@ export const openAIServices = {
     "13.5% VAT": "Tax at 13.5% VAT"
   },
   "total_discount": "Sum of item discounts (ignore payment deductions)",
-  "total_amount": "Sum of item final prices (exclude payment deductions)"
+  "total_amount": "Total amount extracted from the receipt text (do not recalculate)"
 }
 
 ### Fixes:
