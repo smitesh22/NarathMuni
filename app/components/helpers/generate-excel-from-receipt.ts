@@ -9,6 +9,7 @@ const generateExcelFromReceipt = async (receiptData: any): Promise<Buffer> => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   };
 
+
   // Add static rows
   const data = [
     ["Store", receiptData.store || "N/A"],
