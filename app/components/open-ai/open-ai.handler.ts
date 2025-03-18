@@ -49,7 +49,6 @@ export default async function handler(
             const workbookBuffer = await generateExcelFromReceipt(
                 processedText
             );
-
             const base64Data = workbookBuffer.toString("base64");
 
             res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
